@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Marble Rush</title>
+  <!-- Fond lilas de la charte -->
+  <rect width="1024" height="1024" fill="#B79CFF"/>
+  <!-- Cible : plateau sombre, anneaux 10 / 20 / 50 et trou central -->
+  <g transform="translate(560 560)">
+    <circle r="372" fill="#1B1530"/>
+    <circle r="318" fill="#FFF8EE"/>
+    <circle r="300" fill="#B79CFF" stroke="#1B1530" stroke-width="14"/>
+    <circle r="214" fill="#FF9ED2" stroke="#1B1530" stroke-width="14"/>
+    <circle r="132" fill="#FFF8EE" stroke="#1B1530" stroke-width="14"/>
+    <circle r="72" fill="#1B1530"/>
+  </g>
+  <!-- Traînée de vitesse de la bille -->
+  <g stroke="#1B1530" stroke-width="30" stroke-linecap="round" fill="none">
+    <path d="M303 119 L363 186"/>
+    <path d="M199 151 L291 256"/>
+    <path d="M153 251 L213 318"/>
+  </g>
+  <!-- La bille : aplat tomate, contour épais, reflet et symbole -->
+  <g transform="translate(400 380)">
+    <circle r="132" fill="#FF6A3D" stroke="#1B1530" stroke-width="20"/>
+    <path d="M-104 -20 A110 110 0 0 1 20 -110" stroke="#FFF8EE" stroke-width="26" stroke-linecap="round" fill="none" opacity=".9"/>
+  </g>
+</svg>
