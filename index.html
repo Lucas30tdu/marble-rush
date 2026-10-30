@@ -210,6 +210,16 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .about__list div{display:grid;grid-template-columns:1fr auto;gap:var(--space-2);align-items:baseline}
 .about__list dt{font:700 1rem/1.3 var(--font-body);color:var(--ink-soft)}
 .about__list dd{margin:0;font:700 1.125rem/1.3 var(--font-body);color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;overflow-wrap:anywhere}
+.mr-card--soleil .hint{color:var(--on-color)}
+.ol-card{display:grid;gap:var(--space-3)}
+.codebox{font:400 clamp(3.5rem,18vw,5rem)/1 var(--font-display);letter-spacing:.08em;text-align:center;font-variant-numeric:tabular-nums}
+.mr-input{box-sizing:border-box;width:100%;min-height:var(--target-primary);padding:0 20px;border:3px solid var(--line);border-radius:var(--radius-pill);background:var(--card);color:var(--ink);font:400 2rem/1 var(--font-display);letter-spacing:.25em;text-align:center;text-transform:uppercase;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.mr-input::placeholder{color:var(--ink-soft);opacity:.55}
+.mr-input:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.err{font:700 1rem/1.4 var(--font-body);color:var(--on-color);background:var(--bonbon);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4)}
+.err:empty{display:none}
+.note{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:max-content;max-width:min(20rem,84%);padding:var(--space-3) var(--space-5);border-radius:var(--radius-lg);background:var(--soleil);color:var(--on-color);font:700 1.0625rem/1.35 var(--font-body);text-align:center;pointer-events:none}
+:root[data-mr="contraste"] .note,:root[data-mr="contraste"] .mr-input{border:3px solid var(--ink)}
 :root[data-calm] *{animation:none!important;transition:none!important}
 </style>
 
@@ -227,6 +237,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       <div id="cast" class="cast" aria-hidden="true"></div>
       <div class="home__actions">
         <button type="button" id="goPlay" class="mr-btn">Jouer</button>
+        <button type="button" id="goOnline" class="mr-btn mr-btn--soleil">En ligne</button>
         <button type="button" id="goSettings" class="mr-btn mr-btn--quiet">Réglages</button>
       </div>
     </div>
@@ -317,8 +328,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <h3 id="about-h" class="t-m">À propos</h3>
         <dl class="about__list">
           <div><dt>Nom</dt><dd>Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.46</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793359860-71fc</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.47</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793365581-d9e0</dd></div>
           <div><dt>Dernière modification</dt><dd>30/10/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -364,12 +375,80 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       <div id="resHero" class="mr-card mr-card--lilas hero"></div>
       <ol id="resList" class="rank"></ol>
       <div class="actions">
+        <p id="resWait" class="hint" hidden>L’hôte peut relancer une partie.</p>
         <button type="button" id="again" class="mr-btn mr-btn--soleil">Rejouer</button>
         <button type="button" id="toHome2" class="mr-btn mr-btn--quiet">Menu principal</button>
       </div>
     </div>
   </section>
 
+  <section id="scr-online" class="screen" aria-label="Jouer en ligne" hidden>
+    <div class="panel">
+      <header class="head">
+        <h2 class="t-l" data-focus>En ligne</h2>
+        <p class="hint">Chacun joue sur son téléphone. Jusqu’à 4 places, IA comprises.</p>
+      </header>
+      <div class="mr-card mr-card--soleil ol-card">
+        <h3 class="t-m">Créer un salon</h3>
+        <p class="hint">Tu reçois un code de 4 lettres à donner à tes amis.</p>
+        <button type="button" id="olCreate" class="mr-btn">Créer un salon</button>
+      </div>
+      <div class="mr-card ol-card">
+        <h3 class="t-m"><label for="olCode">Rejoindre un salon</label></h3>
+        <input id="olCode" class="mr-input" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="ABCD" aria-describedby="olCodeHint">
+        <p id="olCodeHint" class="hint">Tape le code que l’hôte t’a donné.</p>
+        <button type="button" id="olJoin" class="mr-btn mr-btn--soleil">Rejoindre</button>
+      </div>
+      <p id="olErr" class="err" role="alert"></p>
+      <div class="actions">
+        <button type="button" id="olBack" class="mr-btn mr-btn--quiet">Retour</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="scr-lobby" class="screen" aria-label="Salon" hidden>
+    <div class="panel">
+      <header class="head" style="text-align:center">
+        <p class="lbl">Code du salon</p>
+        <h2 id="lbCode" class="codebox" data-focus></h2>
+        <button type="button" id="lbCopy" class="mr-btn mr-btn--quiet">Copier le code</button>
+      </header>
+      <fieldset class="field">
+        <legend class="lbl">Autour de la table</legend>
+        <p id="lbHint" class="t-m" aria-live="polite"></p>
+        <ul id="lbRoster" class="roster"></ul>
+      </fieldset>
+      <div id="lbHost" class="panel" style="flex:none;width:100%">
+        <fieldset class="field">
+          <legend class="lbl">IA en face</legend>
+          <div class="chips" role="group" aria-label="Nombre d'IA">
+            <button type="button" id="lbAi0" class="mr-chip" aria-pressed="false">Aucune</button>
+            <button type="button" id="lbAi1" class="mr-chip" aria-pressed="false">1</button>
+            <button type="button" id="lbAi2" class="mr-chip" aria-pressed="false">2</button>
+            <button type="button" id="lbAi3" class="mr-chip" aria-pressed="false">3</button>
+          </div>
+          <p id="lbAiHint" class="hint"></p>
+        </fieldset>
+        <fieldset class="field">
+          <legend class="lbl">Billes par joueur</legend>
+          <div class="stepper">
+            <button type="button" id="lbMinus" class="mr-btn mr-btn--icon" aria-label="Moins de billes">−</button>
+            <output id="lbVal" class="stepper__val" aria-live="polite">10</output>
+            <button type="button" id="lbPlus" class="mr-btn mr-btn--icon" aria-label="Plus de billes">+</button>
+          </div>
+          <p class="hint">Tu es l’hôte : tu règles la partie, et la physique de ton téléphone sert pour tout le monde.</p>
+        </fieldset>
+      </div>
+      <div id="lbGuest" class="mr-card"><p id="lbWait" class="hint"></p></div>
+      <p id="lbErr" class="err" role="alert"></p>
+      <div class="actions">
+        <button type="button" id="lbStart" class="mr-btn">C’est parti !</button>
+        <button type="button" id="lbLeave" class="mr-btn mr-btn--tomate">Quitter le salon</button>
+      </div>
+    </div>
+  </section>
+
+  <p id="note" class="note" role="status" hidden></p>
   <p id="live" class="sr" aria-live="polite"></p>
 </div>
 
@@ -603,27 +682,52 @@ function layout(){
   // restent tous à l'écran et ne se chevauchent pas.
   const FREE=150;  // place réservée au bord de l'écran pour un cadre et son message
   const n=np();
-  if(n===2){
-    // La bille de départ est à 1.08 rayon du plateau, plus son propre rayon.
-    R=Math.min(R,((portrait?H:W)/2-FREE)/1.14);
-  }else if(n===4){
-    // À 4, la bille de départ est en diagonale : son centre est à 0.76 rayon sur chaque axe.
-    R=Math.min(R,(W/2-12)/0.82,(H/2-FREE)/0.82);
-  }else{
-    // À 1 ou 3, la bille du bas est sur l'axe vertical ; à 3, celles du haut sont en diagonale.
-    R=Math.min(R,(H/2-FREE)/1.14,n===3?(W/2-12)/0.82:1e9);
-  }
+  // En ligne : on tourne le plateau d'un quart de tour à la fois pour que ta place soit en bas.
+  if(G&&G.seats)setRot(pickRot(n,G.mySeat));else setRot(0);
+  const angs=seatAngles(n);
+  angs.forEach(function(a){
+    // Place sur l'axe vertical ou horizontal : la bille de départ est à 1.08 rayon, plus son propre rayon.
+    // Place en diagonale : son centre est à 0.76 rayon sur chaque axe.
+    if(a===90||a===270)R=Math.min(R,(H/2-FREE)/1.14);
+    else if(a===0||a===180)R=Math.min(R,(W/2-FREE)/1.14);
+    else R=Math.min(R,(W/2-12)/0.82,(H/2-FREE)/0.82);
+  });
   R=Math.max(R,60);
   cx=W/2;cy=H/2;S=R/WR;
-  $('pauseBtn').className='mr-btn pausebtn '+(np()>=3?'pb-tc':'pb-tl');
+  $('pauseBtn').className='mr-btn pausebtn '+(n>=3&&angs.indexOf(270)<0?'pb-tc':'pb-tl');
 }
 
 // Angles des places (écran, y vers le bas) : chaque point du plateau appartient à la place la plus proche.
 const SEAT_DEG={1:[90],3:[90,225,315],4:[135,225,315,45]};
+// Places du plateau en ligne (identiques sur tous les téléphones), avant rotation de la vue.
+function worldSeats(n){return n===2?[90,270]:SEAT_DEG[n];}
+// Angles des places à l'écran.
 function seatAngles(n){
+  if(G&&G.seats)return worldSeats(n).map(function(a){return (a+VROT)%360;});
   if(n===2)return portrait?[90,270]:[180,0];
   return SEAT_DEG[n];
 }
+// Rotation de la vue en ligne : ta place en bas, aucune place sur les côtés étroits de l'écran.
+let VROT=0,VC=1,VS=0;
+function setRot(d){VROT=d;VC=Math.round(Math.cos(d*Math.PI/180));VS=Math.round(Math.sin(d*Math.PI/180));}
+function pickRot(n,me){
+  if(me<0)return 0;
+  const w=worldSeats(n);
+  let best=0,bc=1e9;
+  for(let k=0;k<4;k++){
+    let c=0;
+    w.forEach(function(a0,i){
+      const a=(a0+90*k)%360,r=a*Math.PI/180;
+      if(i===me)c+=-10*Math.sin(r)+0.5*Math.cos(r);
+      if(portrait?(a===0||a===180):(a===90||a===270))c+=6;
+    });
+    if(c<bc-1e-6){bc=c;best=90*k;}
+  }
+  return best;
+}
+function toScr(x,y){return {x:cx+(x*VC-y*VS)*S,y:cy+(x*VS+y*VC)*S};}
+function vScr(ux,uy){return {x:ux*VC-uy*VS,y:ux*VS+uy*VC};}
+function vWorld(ux,uy){return {x:ux*VC+uy*VS,y:-ux*VS+uy*VC};}
 function slotAt(x,y){
   const a=Math.atan2(y-cy,x-cx)*180/Math.PI;
   const angs=seatAngles(G.players);
@@ -636,20 +740,28 @@ function slotAt(x,y){
 }
 function anchorOf(p){
   const lim=WR+MR+22; // départ juste à l'extérieur du grand cercle
-  const t=seatAngles(G.players)[p]*Math.PI/180;
+  const t=(G.seats?worldSeats(G.players):seatAngles(G.players))[p]*Math.PI/180;
   return {x:lim*Math.cos(t),y:lim*Math.sin(t)};
 }
 function hudSpec(p){
   const m=48; // place réservée au message « À toi ! », à l'extérieur de chaque cadre
-  const n=G.players;
-  if(n===2){
-    if(portrait)return p===0?{x:W/2,y:H-m-HH/2,rot:0}:{x:W/2,y:m+HH/2,rot:Math.PI};
-    return p===0?{x:m+HH/2,y:H/2,rot:Math.PI/2}:{x:W-m-HH/2,y:H/2,rot:-Math.PI/2};
-  }
-  if(n===1||(n===3&&p===0))return {x:W/2,y:H-m-HH/2,rot:0};
+  const a=seatAngles(G.players)[p];
   const sc=hudSc(),hx=m+HW*sc/2,hy=m+HH*sc/2;
-  if(n===3)return [null,{x:hx,y:hy,rot:Math.PI},{x:W-hx,y:hy,rot:Math.PI}][p];
-  return [{x:hx,y:H-hy,rot:0},{x:hx,y:hy,rot:Math.PI},{x:W-hx,y:hy,rot:Math.PI},{x:W-hx,y:H-hy,rot:0}][p];
+  if(a===90)return {x:W/2,y:H-m-HH/2,rot:0};
+  if(a===270)return {x:W/2,y:m+HH/2,rot:Math.PI};
+  if(a===180)return {x:m+HH/2,y:H/2,rot:Math.PI/2};
+  if(a===0)return {x:W-m-HH/2,y:H/2,rot:-Math.PI/2};
+  if(a===135)return {x:hx,y:H-hy,rot:0};
+  if(a===45)return {x:W-hx,y:H-hy,rot:0};
+  if(a===225)return {x:hx,y:hy,rot:Math.PI};
+  return {x:W-hx,y:hy,rot:Math.PI};
+}
+// Le joueur dont c'est le tour joue-t-il sur ce téléphone ?
+function isMine(p){return !G.seats||(G.seats[p]===UID&&!G.isAI[p]);}
+function turnText(){
+  const p=G.turn;
+  if(G.seats&&!isMine(p))return 'Au tour de '+CHARS[p].name+'.';
+  return 'À toi, '+CHARS[p].name+'.';
 }
 function say(t){$('live').textContent=t;}
 
@@ -665,7 +777,7 @@ function startGame(){
   for(let i=0;i<4;i++)flash[i]=0;
   show('game');
   layout();
-  say('À toi, '+CHARS[0].name+'.');
+  say(turnText());
 }
 function recompute(){
   for(let p=0;p<G.players;p++)G.scores[p]=0;
@@ -678,7 +790,7 @@ function settle(){
   if(done){endGame();return;}
   G.turn=(G.turn+1)%G.players;
   G.phase='aim';G.enter=calm?ENTER_T:0;
-  say('À toi, '+CHARS[G.turn].name+'.');
+  say(turnText());
 }
 function endGame(){
   G.phase='end';
@@ -694,9 +806,10 @@ function endGame(){
     const lost=G.lost[p];
     const sub=lost===0?'Aucune bille perdue':lost+(lost>1?' billes perdues':' bille perdue');
     const win=winners.indexOf(p)>=0,bot=G.isAI[p];
-    const who=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span> · ':'Joueur '+(p+1)+' · ';
+    const who=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span> · ':(G.seats&&G.seats[p]===UID?'Toi · ':'Joueur '+(p+1)+' · ');
     return '<li class="rank__row mr-card'+(win?' mr-card--soleil':'')+'"><span class="avbg">'+av(p,null,CHARS[p].name+(bot?', IA':', joueur '+(p+1)))+(bot?botBadge():'')+'</span><span class="rank__nm"><strong>'+CHARS[p].name+'</strong><span class="rank__sub">'+who+sub+'</span></span><span class="rank__pt">'+G.scores[p]+'</span></li>';
   }).join('');
+  syncOnlineUi();
   show('result');
   say('Partie terminée. '+title);
 }
@@ -713,8 +826,13 @@ window.addEventListener('pointerdown',function(e){
   if(!G||view!=='game'||G.phase!=='aim'||paused||aim||G.enter<ENTER_T)return;
   if(e.target.closest&&e.target.closest('.screen,button'))return;
   const q=local(e);
-  const s=slotAt(q.x,q.y);
-  if(s!==G.turn){flash[G.turn]=0.5;return;}
+  if(G.seats){
+    // En ligne, tout l'écran est à toi quand c'est ton tour.
+    if(!isMine(G.turn)){flash[G.turn]=0.5;return;}
+  }else{
+    const s=slotAt(q.x,q.y);
+    if(s!==G.turn){flash[G.turn]=0.5;return;}
+  }
   aim={id:e.pointerId,sx:q.x,sy:q.y,x:q.x,y:q.y};
   e.preventDefault();
 });
@@ -729,7 +847,8 @@ function endAim(e,fire){
   const dx=aim.x-aim.sx,dy=aim.y-aim.sy,len=Math.hypot(dx,dy),frac=len/(WR*S);
   aim=null;
   if(fire&&G&&G.phase==='aim'&&frac>=L_MIN){
-    launch(G.turn,dx/len,dy/len,VMAX*powerOf(frac));
+    const u=vWorld(dx/len,dy/len),v=VMAX*powerOf(frac);
+    if(ON)olThrow(G.turn,u.x,u.y,v);else launch(G.turn,u.x,u.y,v);
   }
 }
 window.addEventListener('pointerup',function(e){endAim(e,true);});
@@ -832,26 +951,27 @@ function drawBoard(){
   }
 }
 function drawMarbles(){
+  const rot=VROT*Math.PI/180;
   for(const m of G.marbles){
-    const x=cx+m.x*S,y=cy+m.y*S;
+    const q=toScr(m.x,m.y),x=q.x,y=q.y;
     if(m.out){
       ctx.save();ctx.globalAlpha=Math.max(0,1-(m.fade||0)/0.4);
-      drawMarble(x,y,MR*S,m.owner,m.roll*S,m.dir);
+      drawMarble(x,y,MR*S,m.owner,m.roll*S,m.dir+rot);
       ctx.restore();
       continue;
     }
     if(m.fall>=0){
       const k=Math.pow(Math.max(0,1-m.fall/FALL_T),1.3); // rétrécit comme la spirale se resserre
-      drawMarble(x,y,MR*S*k,m.owner,m.roll*S,m.dir);
-    }else drawMarble(x,y,MR*S,m.owner,m.roll*S,m.dir);
+      drawMarble(x,y,MR*S*k,m.owner,m.roll*S,m.dir+rot);
+    }else drawMarble(x,y,MR*S,m.owner,m.roll*S,m.dir+rot);
   }
 }
 function drawAim(){
   if(G.phase!=='aim')return;
-  const p=G.turn,col=pcol(p),a=anchorOf(p),ax=cx+a.x*S,ay=cy+a.y*S,r=MR*S;
+  const p=G.turn,col=pcol(p),a=anchorOf(p),aq=toScr(a.x,a.y),ax=aq.x,ay=aq.y,r=MR*S;
   // La bille glisse depuis le bord de l'écran jusqu'à son point de départ.
   const k=Math.min(1,G.enter/ENTER_T),e=1-Math.pow(1-k,3);
-  const al=Math.hypot(a.x,a.y)||1,ux=a.x/al,uy=a.y/al;
+  const al=Math.hypot(a.x,a.y)||1,uq=vScr(a.x/al,a.y/al),ux=uq.x,uy=uq.y;
   let tt=1e9;
   if(ux>0)tt=Math.min(tt,(W-ax)/ux);else if(ux<0)tt=Math.min(tt,-ax/ux);
   if(uy>0)tt=Math.min(tt,(H-ay)/uy);else if(uy<0)tt=Math.min(tt,-ay/uy);
@@ -868,7 +988,8 @@ function drawAim(){
     ctx.save();
     ctx.strokeStyle=col;ctx.lineWidth=4;ctx.globalAlpha=0.7;ctx.lineCap='round';ctx.setLineDash([12,10]);
     ctx.beginPath();ctx.moveTo(mx,my);
-    ctx.lineTo(mx+G.aiShot.ux*WR*S*0.5,my+G.aiShot.uy*WR*S*0.5);ctx.stroke();
+    const sh=vScr(G.aiShot.ux,G.aiShot.uy);
+    ctx.lineTo(mx+sh.x*WR*S*0.5,my+sh.y*WR*S*0.5);ctx.stroke();
     ctx.restore();
   }
   if(!aim)return;
@@ -935,7 +1056,7 @@ function drawHud(p){
     rr(-46,HH/2+6,92,30,15);ctx.fillStyle=col;ctx.fill();
     ctx.fillStyle=T['on-color'];ctx.font='700 16px '+FB;
     ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(G.isAI[p]?'Réfléchit…':'À toi !',0,HH/2+21);
+    ctx.fillText(G.isAI[p]?'Réfléchit…':(isMine(p)?'À toi !':'Joue…'),0,HH/2+21);
   }
   ctx.restore();
 }
@@ -982,7 +1103,9 @@ const STEP=1/240;
 let lastT=performance.now(),acc=0;
 function frame(now){
   const dt=Math.min(.05,(now-lastT)/1000);lastT=now;
-  if(G&&!paused&&view==='game'){
+  // En ligne, la partie continue derrière la pause : les autres joueurs n'attendent pas.
+  const run=!!(G&&(ON?G.gid:(!paused&&view==='game')));
+  if(run){
     G.t+=dt;
     if(G.phase==='aim'&&G.t>=INTRO_T)G.enter+=dt;
     for(let i=0;i<4;i++)if(flash[i]>0)flash[i]=Math.max(0,flash[i]-dt);
@@ -995,7 +1118,7 @@ function frame(now){
       G.aiThink-=dt;
       if(G.aiThink<=0){
         const s=G.aiShot;
-        launch(G.turn,s.ux,s.uy,s.v);
+        if(ON)olThrow(G.turn,s.ux,s.uy,s.v);else launch(G.turn,s.ux,s.uy,s.v);
       }
     }
     if(G.phase==='roll'){
@@ -1011,12 +1134,13 @@ function frame(now){
       let moving=false;
       for(const m of G.marbles){if(m.fall>=0||m.vx!==0||m.vy!==0){moving=true;break;}}
       if(moving)G.settleT=0;
-      else{G.settleT+=dt;if(G.settleT>.3)settle();}
+      else{G.settleT+=dt;if(G.settleT>.3){if(ON)olSettled();else settle();}}
     }
+    if(ON&&G&&G.pend&&(G.phase!=='roll'||performance.now()-G.pendAt>5000))applyState(G.pend);
   }
   // Une erreur de dessin ne doit pas arrêter la boucle : sinon l'écran reste figé.
   // Une bille envoyée hors du plateau compte comme perdue, puis disparaît en fondu.
-  if(G&&!paused&&view==='game'){
+  if(run&&G){
     G.marbles=G.marbles.filter(function(m){
       if(!m.out)return true;
       if(!m.counted){G.lost[m.owner]++;m.counted=true;}
@@ -1031,7 +1155,8 @@ function frame(now){
 /* ---------- Adversaire IA (niveau moyen) ---------- */
 const AI_DELAY=1.1; // secondes de réflexion avant chaque coup
 const AI_TRIES=14;  // lancers simulés à chaque coup
-function aiIsTurn(){return !!(G&&G.phase==='aim'&&G.isAI[G.turn]);}
+// En ligne, seul le téléphone de l'hôte fait jouer les IA.
+function aiIsTurn(){return !!(G&&G.phase==='aim'&&G.isAI[G.turn]&&(!ON||ON.host));}
 // Simule le lancer sur une copie du plateau et évalue ce qu'il rapporte à l'IA.
 function simulateShot(ux,uy,v){
   const who=G.turn;
@@ -1073,7 +1198,7 @@ function aiChooseShot(){
 }
 
 /* ---------- Écrans ---------- */
-const VIEWS=['home','play','settings','physics','pause','result'];
+const VIEWS=['home','play','settings','physics','pause','result','online','lobby'];
 function show(v){
   VIEWS.forEach(function(n){$('scr-'+n).hidden=(n!==v);});
   root.setAttribute('data-view',v==='game'?'game':(v==='home'?'home':'menu'));
@@ -1114,6 +1239,7 @@ function syncPrefs(){
   t.lastElementChild.textContent=calm?'Oui':'Non';
 }
 function toHome(){
+  if(ON){leaveRoom();return;}
   G=null;aim=null;paused=false;
   show('home');layout();
 }
@@ -1168,7 +1294,7 @@ function buildTune(){
 
 /* ---------- Boutons ---------- */
 $('goPlay').addEventListener('click',function(){syncPlay();show('play');});
-$('goSettings').addEventListener('click',function(){settingsFrom='home';syncPrefs();show('settings');});
+$('goSettings').addEventListener('click',function(){settingsFrom='home';syncPrefs();$('openPhys').hidden=false;show('settings');});
 $('playBack').addEventListener('click',function(){show('home');});
 [1,2,3,4].forEach(function(n){
   $('nb'+n).addEventListener('click',function(){cfg.humans=n;cfg.ai=Math.min(cfg.ai,4-n);saveCfg();syncPlay();layout();});
@@ -1199,10 +1325,348 @@ $('tgCalm').addEventListener('click',function(){
 $('pauseBtn').addEventListener('click',function(){aim=null;paused=true;show('pause');});
 $('resume').addEventListener('click',function(){paused=false;show('game');});
 $('restart').addEventListener('click',startGame);
-$('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();show('settings');});
+$('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();$('openPhys').hidden=!!ON;show('settings');});
 $('toHome').addEventListener('click',toHome);
-$('again').addEventListener('click',startGame);
+$('again').addEventListener('click',function(){if(ON){if(ON.host)hostStart();}else startGame();});
 $('toHome2').addEventListener('click',toHome);
+
+/* ---------- En ligne (Firebase Realtime Database) ----------
+   Salon : rooms/CODE = { meta, players, game, state, throw }.
+   - Le lanceur écrit son lancer (throw) ; chaque téléphone le rejoue avec la même physique.
+   - L'hôte fait foi : une fois les billes arrêtées, il écrit l'état du plateau (state), que tout le monde reprend.
+   - L'hôte fait jouer les IA, et une IA remplace un joueur parti depuis plus de 8 secondes. */
+const FB_URL='https://marble-rush-6888e-default-rtdb.europe-west1.firebasedatabase.app';
+const FB_CDN='https://cdn.jsdelivr.net/npm/firebase@10.12.2/';
+const UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
+const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ';
+const NET_ERR='Impossible de joindre le serveur. Vérifie ta connexion internet. Le mode en ligne ne marche pas dans l’aperçu de Claude : ouvre le jeu depuis sa page web.';
+let ON=null,fbP=null;
+function loadScript(src){
+  return new Promise(function(ok,ko){
+    const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){ko(new Error('script'));};
+    document.head.appendChild(s);
+  });
+}
+function fb(){
+  if(fbP)return fbP;
+  fbP=(window.firebase&&window.firebase.database?Promise.resolve():loadScript(FB_CDN+'firebase-app-compat.js').then(function(){return loadScript(FB_CDN+'firebase-database-compat.js');}))
+  .then(function(){
+    const app=firebase.apps.length?firebase.app():firebase.initializeApp({databaseURL:FB_URL,projectId:'marble-rush-6888e'});
+    const db=app.database();
+    return new Promise(function(ok,ko){
+      const r=db.ref('.info/connected');
+      const t=setTimeout(function(){r.off('value',h);ko(new Error('offline'));},9000);
+      const h=r.on('value',function(s){if(s.val()===true){clearTimeout(t);r.off('value',h);ok(db);}});
+    });
+  }).catch(function(e){fbP=null;throw e;});
+  return fbP;
+}
+function olErr(t){$('olErr').textContent=t||'';}
+function busy(b,on,label){
+  if(on){b.dataset.lbl=b.textContent;b.textContent=label;setDisabled(b,true);}
+  else{if(b.dataset.lbl)b.textContent=b.dataset.lbl;setDisabled(b,false);}
+}
+function genCode(){let c='';for(let i=0;i<4;i++)c+=CODE_ABC[Math.floor(Math.random()*CODE_ABC.length)];return c;}
+
+function olCreate(){
+  const b=$('olCreate');if(isOff(b))return;
+  olErr('');busy(b,true,'Création…');
+  fb().then(function(db){
+    let tries=0;
+    const attempt=function(){
+      const code=genCode(),now=Date.now();
+      return db.ref('rooms/'+code).transaction(function(cur){
+        // Un code déjà pris par un salon récent n'est pas réutilisé.
+        if(cur&&cur.meta&&now-(cur.meta.t||0)<6*3600e3)return;
+        const pl={};pl[UID]={t:now};
+        return {meta:{host:UID,hostOn:true,t:now,status:'lobby',ai:0,marbles:cfg.marbles},players:pl};
+      }).then(function(res){
+        if(res.committed&&res.snapshot.val()){busy(b,false);enterRoom(db,code,true);return;}
+        if(++tries<6)return attempt();
+        busy(b,false);olErr('Impossible de créer un salon. Réessaie.');
+      });
+    };
+    return attempt();
+  }).catch(function(){busy(b,false);olErr(NET_ERR);});
+}
+function olJoin(){
+  const b=$('olJoin');if(isOff(b))return;
+  const code=$('olCode').value.toUpperCase().replace(/[^A-Z]/g,'');
+  if(code.length!==4){olErr('Le code a 4 lettres.');return;}
+  olErr('');busy(b,true,'Connexion…');
+  fb().then(function(db){
+    let why='';
+    return db.ref('rooms/'+code).transaction(function(cur){
+      why='';
+      // Pas encore de valeur connue : on laisse le serveur répondre avec le vrai salon.
+      if(cur===null)return null;
+      const m=cur.meta||{},pl=cur.players||{};
+      if(pl[UID])return cur;
+      if(m.status!=='lobby'){why='busy';return;}
+      if(Object.keys(pl).length+(m.ai||0)>=4){why='full';return;}
+      pl[UID]={t:Date.now()};cur.players=pl;
+      return cur;
+    }).then(function(res){
+      busy(b,false);
+      if(res.committed&&res.snapshot.val()){enterRoom(db,code,false);return;}
+      olErr(why==='busy'?'La partie a déjà commencé dans ce salon.':why==='full'?'Ce salon est complet.':'Aucun salon avec ce code.');
+    });
+  }).catch(function(){busy(b,false);olErr(NET_ERR);});
+}
+
+function enterRoom(db,code,host){
+  ON={db:db,code:code,host:host,ref:db.ref('rooms/'+code),room:null,t:Date.now(),gone:{},hostOn:true};
+  ON.connRef=db.ref('.info/connected');
+  // À chaque (re)connexion : on se réinscrit dans le salon et on prévient le serveur de notre départ éventuel.
+  ON.connH=ON.connRef.on('value',function(s){
+    if(!ON||s.val()!==true)return;
+    ON.ref.child('players/'+UID).onDisconnect().remove();
+    if(ON.host)ON.ref.child('meta/hostOn').onDisconnect().set(false);
+    const me=ON;
+    ON.ref.transaction(function(cur){
+      if(cur===null)return null;
+      if(!cur.meta)return;
+      cur.players=cur.players||{};
+      if(!cur.players[UID])cur.players[UID]={t:me.t};
+      if(me.host)cur.meta.hostOn=true;
+      return cur;
+    });
+  });
+  ON.ref.on('value',onRoom);
+  if(host)ON.tick=setInterval(hostTick,2000);
+  $('lbCode').textContent=code;
+  $('lbErr').textContent='';
+  show('lobby');
+}
+function leaveRoom(msg){
+  if(!ON)return;
+  const o=ON;ON=null;
+  o.ref.off('value',onRoom);
+  o.connRef.off('value',o.connH);
+  if(o.tick)clearInterval(o.tick);
+  o.ref.child('players/'+UID).onDisconnect().cancel();
+  if(o.host){o.ref.child('meta/hostOn').onDisconnect().cancel();o.ref.remove();}
+  else if(!msg)o.ref.child('players/'+UID).remove();
+  G=null;aim=null;paused=false;setRot(0);
+  applyTune();
+  $('note').hidden=true;
+  syncOnlineUi();
+  show('online');olErr(msg||'');
+  layout();
+}
+
+function lobbyOrder(r){
+  const pl=r.players||{},host=r.meta.host;
+  return Object.keys(pl).sort(function(a,b){
+    if(a===host)return -1;if(b===host)return 1;
+    return (pl[a].t||0)-(pl[b].t||0);
+  });
+}
+function lobbyCounts(r){
+  const order=lobbyOrder(r);
+  if(ON.host&&order.indexOf(UID)<0)order.unshift(UID);
+  const h=order.length,ai=Math.max(0,Math.min(r.meta.ai||0,4-h));
+  return {order:order,h:h,ai:ai};
+}
+function syncLobby(){
+  const r=ON.room,m=r.meta,c=lobbyCounts(r),t=c.h+c.ai;
+  $('lbRoster').innerHTML=c.order.concat(new Array(c.ai).fill('ai')).map(function(u,i){
+    const bot=u==='ai',ch=CHARS[i];
+    const sub=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span>':(u===UID?'Toi':'Joueur '+(i+1))+(u===m.host?' · Hôte':'');
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,ch.name+(bot?', IA':', joueur '+(i+1)))+(bot?botBadge():'')+'</span><span class="roster__n"><strong>'+ch.name+'</strong><span class="roster__s">'+sub+'</span></span></li>';
+  }).join('');
+  $('lbHint').textContent='Partie à '+t+' : '+c.h+(c.h>1?' joueurs':' joueur')+(c.ai?' + '+c.ai+' IA':'');
+  $('lbHost').hidden=!ON.host;
+  $('lbGuest').hidden=ON.host;
+  $('lbStart').hidden=!ON.host;
+  if(ON.host){
+    const free=4-c.h;
+    [0,1,2,3].forEach(function(n){const b=$('lbAi'+n);b.hidden=n>free;b.setAttribute('aria-pressed',String(c.ai===n));});
+    $('lbAiHint').textContent=free===0?'Table complète : pas de place pour une IA.':'Il reste '+free+(free>1?' places':' place')+'. Les IA jouent depuis ton téléphone.';
+    $('lbVal').textContent=String(m.marbles);
+    setDisabled($('lbMinus'),m.marbles<=3);
+    setDisabled($('lbPlus'),m.marbles>=15);
+    setDisabled($('lbStart'),t<2);
+    $('lbErr').textContent=t<2?'Il faut au moins 2 places : attends un ami ou ajoute une IA.':'';
+  }else{
+    $('lbWait').textContent=(m.hostOn===false?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+m.marbles+' billes par joueur.';
+    $('lbErr').textContent='';
+  }
+}
+function syncOnlineUi(){
+  const on=!!ON;
+  $('restart').hidden=on;
+  $('toHome').textContent=on?'Quitter le salon':'Menu principal';
+  $('toHome2').textContent=on?'Quitter le salon':'Menu principal';
+  $('again').hidden=on&&!ON.host;
+  $('resWait').hidden=!(on&&!ON.host);
+}
+let noteT=0;
+function note(t,ms){
+  const n=$('note');n.textContent=t;n.hidden=false;say(t);
+  clearTimeout(noteT);
+  if(ms!==0)noteT=setTimeout(function(){n.hidden=true;},ms||3500);
+}
+
+function onRoom(snap){
+  if(!ON)return;
+  const r=snap.val();
+  if(!r||!r.meta){leaveRoom(ON.host?'Le salon a été fermé.':'Le salon a été fermé par l’hôte.');return;}
+  ON.room=r;
+  const hostOn=r.meta.hostOn!==false;
+  if(hostOn!==ON.hostOn&&!ON.host&&G&&G.gid){
+    note(hostOn?'L’hôte est de retour.':'L’hôte s’est déconnecté. La partie reprend à son retour.',hostOn?2500:0);
+  }
+  ON.hostOn=hostOn;
+  if(r.meta.status==='game'&&r.game){
+    if(!G||G.gid!==r.game.id)startOnline(r);
+    else onlineUpdate(r);
+    return;
+  }
+  if(G){G=null;aim=null;paused=false;setRot(0);applyTune();}
+  syncLobby();
+  if(['lobby','settings','physics'].indexOf(view)<0)show('lobby');
+}
+
+function curTune(){return {ACC:ACC,VISC:VISC,E_BALL:E_BALL,E_WALL:E_WALL,VMAX:VMAX};}
+function hostStart(){
+  if(!ON||!ON.host||!ON.room)return;
+  const r=ON.room,c=lobbyCounts(r),n=c.h+c.ai;
+  if(n<2)return;
+  const seats=c.order.concat(new Array(c.ai).fill('ai'));
+  const z=new Array(n).fill(0);
+  ON.ref.update({
+    'meta/status':'game',
+    game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,ai:seats.map(function(s){return s==='ai';}),tune:curTune()},
+    state:{seq:0,turn:0,thrown:z,lost:z,done:false},
+    throw:null
+  });
+}
+function startOnline(r){
+  const g=r.game,tu=g.tune||{};
+  // Tout le monde joue avec la physique de l'hôte.
+  if(isFinite(tu.ACC))ACC=tu.ACC;if(isFinite(tu.VISC))VISC=tu.VISC;
+  if(isFinite(tu.E_BALL))E_BALL=tu.E_BALL;if(isFinite(tu.E_WALL))E_WALL=tu.E_WALL;if(isFinite(tu.VMAX))VMAX=tu.VMAX;
+  G={
+    players:g.n,N:g.N,marbles:[],isAI:g.ai.slice(),seats:g.seats.slice(),gid:g.id,mySeat:g.seats.indexOf(UID),
+    seq:-1,rollSeq:-1,pend:null,
+    thrown:new Array(g.n).fill(0),scores:new Array(g.n).fill(0),lost:new Array(g.n).fill(0),
+    turn:0,phase:'aim',t:calm?INTRO_T:0,settleT:0,enter:calm?ENTER_T:0
+  };
+  aim=null;paused=false;
+  for(let i=0;i<4;i++)flash[i]=0;
+  $('note').hidden=true;
+  syncOnlineUi();
+  show('game');
+  layout();
+  onlineUpdate(r);
+}
+function onlineUpdate(r){
+  const g=r.game,st=r.state,th=r.throw;
+  // Une IA a pris la place d'un joueur parti.
+  (g.ai||[]).forEach(function(a,i){
+    if(a&&!G.isAI[i]){
+      G.isAI[i]=true;
+      note(i===G.mySeat?'Tu as été déconnecté : une IA joue à ta place.':CHARS[i].name+' est parti : une IA prend sa place.');
+    }
+  });
+  if(st&&st.seq>G.seq&&(!G.pend||st.seq>=G.pend.seq)){G.pend=st;G.pendAt=performance.now();}
+  // Un lancer d'un autre téléphone : on applique d'abord l'état attendu, puis on rejoue le lancer.
+  if(th&&G.rollSeq!==th.seq&&G.pend&&G.pend.seq===th.seq-1)applyState(G.pend);
+  if(G.pend&&G.phase!=='roll')applyState(G.pend);
+  if(th&&th.seq===G.seq+1&&G.rollSeq!==th.seq&&G.phase==='aim'&&th.p===G.turn){
+    G.rollSeq=th.seq;aim=null;
+    launch(th.p,th.ux,th.uy,th.v);
+  }
+}
+function applyState(st){
+  if(!G)return;
+  G.pend=null;G.seq=st.seq;
+  G.marbles=(st.ms||[]).map(function(a){
+    const m=makeMarble(a[0],a[1],a[2],0,0);
+    m.entered=true;m.roll=a[3]||0;m.dir=a[4]||0;
+    return m;
+  });
+  const n=G.players;
+  for(let p=0;p<n;p++){G.thrown[p]=(st.thrown&&st.thrown[p])||0;G.lost[p]=(st.lost&&st.lost[p])||0;}
+  recompute();
+  G.aiThink=null;G.aiShot=null;
+  if(st.done){endGame();return;}
+  const changed=G.turn!==st.turn||G.phase!=='aim';
+  G.turn=st.turn||0;G.phase='aim';
+  if(changed||st.seq===0){G.enter=calm?ENTER_T:0;say(turnText());}
+}
+function olThrow(p,ux,uy,v){
+  const seq=G.seq+1;
+  G.rollSeq=seq;
+  launch(p,ux,uy,v);
+  ON.ref.child('throw').set({seq:seq,p:p,ux:ux,uy:uy,v:v});
+}
+// Billes arrêtées : l'hôte publie le nouvel état, les autres l'attendent.
+function olSettled(){
+  recompute();
+  G.phase='wait';
+  if(!ON.host)return;
+  let done=true;
+  for(let p=0;p<G.players;p++){if(G.thrown[p]<G.N)done=false;}
+  const rd=function(v,k){return Math.round(v*k)/k;};
+  const st={
+    seq:G.rollSeq,turn:done?G.turn:(G.turn+1)%G.players,
+    thrown:G.thrown.slice(),lost:G.lost.slice(),done:done,
+    ms:G.marbles.filter(function(m){return m.fall<0&&!m.out;}).map(function(m){
+      return [m.owner,rd(m.x,100),rd(m.y,100),rd(m.roll,10),rd(m.dir,1000)];
+    })
+  };
+  ON.ref.child('state').set(st);
+}
+// L'hôte remplace par une IA tout joueur absent du salon depuis plus de 8 secondes.
+function hostTick(){
+  if(!ON||!ON.host||!ON.room||!G||!G.gid)return;
+  const r=ON.room,pl=r.players||{},g=r.game;
+  if(!g)return;
+  const ai=(g.ai||[]).slice();let ch=false;
+  g.seats.forEach(function(u,i){
+    if(ai[i]||u===UID)return;
+    if(pl[u]){delete ON.gone[u];return;}
+    if(!ON.gone[u])ON.gone[u]=Date.now();
+    else if(Date.now()-ON.gone[u]>8000){ai[i]=true;ch=true;}
+  });
+  if(ch)ON.ref.child('game/ai').set(ai);
+}
+
+$('goOnline').addEventListener('click',function(){olErr('');show('online');});
+$('olBack').addEventListener('click',function(){show('home');});
+$('olCreate').addEventListener('click',olCreate);
+$('olJoin').addEventListener('click',olJoin);
+$('olCode').addEventListener('input',function(){
+  const v=this.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
+  if(v!==this.value)this.value=v;
+});
+$('olCode').addEventListener('keydown',function(e){if(e.key==='Enter')olJoin();});
+$('lbLeave').addEventListener('click',function(){leaveRoom();});
+$('lbStart').addEventListener('click',function(){if(!isOff(this))hostStart();});
+$('lbCopy').addEventListener('click',function(){
+  if(!ON)return;
+  const b=this,code=ON.code;
+  const done=function(t){b.textContent=t;setTimeout(function(){b.textContent='Copier le code';},2000);};
+  try{navigator.clipboard.writeText(code).then(function(){done('Code copié');},function(){done('Code : '+code);});}
+  catch(e){done('Code : '+code);}
+});
+[0,1,2,3].forEach(function(n){
+  $('lbAi'+n).addEventListener('click',function(){
+    if(!ON||!ON.host||!ON.room)return;
+    if(n>4-lobbyCounts(ON.room).h)return;
+    ON.ref.child('meta/ai').set(n);
+  });
+});
+function lbMarbles(d){
+  if(!ON||!ON.host||!ON.room)return;
+  const v=Math.max(3,Math.min(15,(ON.room.meta.marbles||10)+d));
+  cfg.marbles=v;saveCfg();
+  ON.ref.child('meta/marbles').set(v);
+}
+$('lbMinus').addEventListener('click',function(){if(!isOff(this))lbMarbles(-1);});
+$('lbPlus').addEventListener('click',function(){if(!isOff(this))lbMarbles(1);});
 
 /* ---------- Effet de clic ---------- */
 document.addEventListener('click',function(e){
@@ -1221,6 +1685,7 @@ buildHome();
 buildTune();
 syncPlay();
 syncPrefs();
+syncOnlineUi();
 show('home');
 if(window.ResizeObserver)new ResizeObserver(layout).observe(stage);
 window.addEventListener('resize',layout);
