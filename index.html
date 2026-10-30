@@ -328,8 +328,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <h3 id="about-h" class="t-m">À propos</h3>
         <dl class="about__list">
           <div><dt>Nom</dt><dd>Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.47</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793365581-d9e0</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.48</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793365776-69cb</dd></div>
           <div><dt>Dernière modification</dt><dd>30/10/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -1362,6 +1362,14 @@ function fb(){
   return fbP;
 }
 function olErr(t){$('olErr').textContent=t||'';}
+// Message selon la cause : base verrouillée, script Firebase bloqué, ou pas de réseau.
+function netErr(e){
+  const m=String((e&&(e.code||e.message))||e||'').toLowerCase();
+  if(m.indexOf('permission')>=0)return 'Le serveur refuse l’accès. Dans la console Firebase, ouvre Realtime Database, puis Règles, et autorise la lecture et l’écriture.';
+  if(m==='script')return 'Le module de connexion n’a pas pu se charger. Vérifie ta connexion internet, ou désactive un bloqueur de contenu.';
+  if(m==='offline')return NET_ERR;
+  return 'Connexion impossible ('+m.slice(0,80)+').';
+}
 function busy(b,on,label){
   if(on){b.dataset.lbl=b.textContent;b.textContent=label;setDisabled(b,true);}
   else{if(b.dataset.lbl)b.textContent=b.dataset.lbl;setDisabled(b,false);}
@@ -1387,7 +1395,7 @@ function olCreate(){
       });
     };
     return attempt();
-  }).catch(function(){busy(b,false);olErr(NET_ERR);});
+  }).catch(function(e){busy(b,false);olErr(netErr(e));});
 }
 function olJoin(){
   const b=$('olJoin');if(isOff(b))return;
@@ -1411,7 +1419,7 @@ function olJoin(){
       if(res.committed&&res.snapshot.val()){enterRoom(db,code,false);return;}
       olErr(why==='busy'?'La partie a déjà commencé dans ce salon.':why==='full'?'Ce salon est complet.':'Aucun salon avec ce code.');
     });
-  }).catch(function(){busy(b,false);olErr(NET_ERR);});
+  }).catch(function(e){busy(b,false);olErr(netErr(e));});
 }
 
 function enterRoom(db,code,host){
