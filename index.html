@@ -328,8 +328,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <h3 id="about-h" class="t-m">À propos</h3>
         <dl class="about__list">
           <div><dt>Nom</dt><dd>Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.48</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793365776-69cb</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.49</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793366191-7c84</dd></div>
           <div><dt>Dernière modification</dt><dd>30/10/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -1330,37 +1330,88 @@ $('toHome').addEventListener('click',toHome);
 $('again').addEventListener('click',function(){if(ON){if(ON.host)hostStart();}else startGame();});
 $('toHome2').addEventListener('click',toHome);
 
-/* ---------- En ligne (Firebase Realtime Database) ----------
+/* ---------- En ligne (Firebase Realtime Database, sans module externe) ----------
    Salon : rooms/CODE = { meta, players, game, state, throw }.
+   - Lecture en direct par un flux d'événements (EventSource), écriture par requêtes web simples.
    - Le lanceur écrit son lancer (throw) ; chaque téléphone le rejoue avec la même physique.
    - L'hôte fait foi : une fois les billes arrêtées, il écrit l'état du plateau (state), que tout le monde reprend.
-   - L'hôte fait jouer les IA, et une IA remplace un joueur parti depuis plus de 8 secondes. */
+   - Chaque téléphone signale sa présence toutes les 4 secondes. L'hôte fait jouer les IA,
+     et une IA remplace un joueur silencieux depuis plus de 12 secondes. */
 const FB_URL='https://marble-rush-6888e-default-rtdb.europe-west1.firebasedatabase.app';
-const FB_CDN='https://cdn.jsdelivr.net/npm/firebase@10.12.2/';
 const UID='u'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);
 const CODE_ABC='ABCDEFGHJKLMNPQRSTUVWXYZ';
 const NET_ERR='Impossible de joindre le serveur. Vérifie ta connexion internet. Le mode en ligne ne marche pas dans l’aperçu de Claude : ouvre le jeu depuis sa page web.';
-let ON=null,fbP=null;
-function loadScript(src){
-  return new Promise(function(ok,ko){
-    const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=function(){ko(new Error('script'));};
-    document.head.appendChild(s);
-  });
-}
-function fb(){
-  if(fbP)return fbP;
-  fbP=(window.firebase&&window.firebase.database?Promise.resolve():loadScript(FB_CDN+'firebase-app-compat.js').then(function(){return loadScript(FB_CDN+'firebase-database-compat.js');}))
-  .then(function(){
-    const app=firebase.apps.length?firebase.app():firebase.initializeApp({databaseURL:FB_URL,projectId:'marble-rush-6888e'});
-    const db=app.database();
-    return new Promise(function(ok,ko){
-      const r=db.ref('.info/connected');
-      const t=setTimeout(function(){r.off('value',h);ko(new Error('offline'));},9000);
-      const h=r.on('value',function(s){if(s.val()===true){clearTimeout(t);r.off('value',h);ok(db);}});
+const NOW={'.sv':'timestamp'};
+let ON=null;
+function noop(){}
+// Requête vers la base. PUT, PATCH et DELETE passent par un POST simple (pas de pré-vérification du navigateur).
+function api(path,method,body){
+  let url=FB_URL+'/'+path+'.json';
+  const o={method:'GET',cache:'no-store'};
+  if(method&&method!=='GET'){o.method='POST';url+='?x-http-method-override='+method;}
+  if(body!==undefined)o.body=JSON.stringify(body);
+  return fetch(url,o).then(function(r){
+    return r.text().then(function(t){
+      if(r.status===401||r.status===403)throw new Error('permission');
+      if(!r.ok)throw new Error('http '+r.status);
+      return t?JSON.parse(t):null;
     });
-  }).catch(function(e){fbP=null;throw e;});
-  return fbP;
+  },function(){throw new Error('offline');});
 }
+// Écriture importante pour la partie : jusqu'à 3 essais.
+function put(path,body,method){
+  if(!ON)return;
+  const full='rooms/'+ON.code+'/'+path;
+  let n=0;
+  const go=function(){api(full,method||'PUT',body).catch(function(){if(++n<3)setTimeout(go,800*n);});};
+  go();
+}
+// Range une valeur reçue du flux à son chemin dans la copie locale du salon.
+function setPath(root,path,val){
+  const parts=String(path).split('/').filter(Boolean);
+  if(!parts.length)return val;
+  if(!root||typeof root!=='object')root={};
+  let o=root;
+  for(let i=0;i<parts.length-1;i++){
+    if(!o[parts[i]]||typeof o[parts[i]]!=='object')o[parts[i]]={};
+    o=o[parts[i]];
+  }
+  const k=parts[parts.length-1];
+  if(val===null)delete o[k];else o[k]=val;
+  return root;
+}
+function openStream(){
+  const es=new EventSource(FB_URL+'/rooms/'+ON.code+'.json');
+  ON.es=es;
+  const on=function(kind){
+    return function(e){
+      if(!ON||ON.es!==es)return;
+      let d;try{d=JSON.parse(e.data);}catch(x){return;}
+      if(!d||d.path===undefined)return;
+      if(kind==='put')ON.room=setPath(ON.room,d.path,d.data);
+      else Object.keys(d.data||{}).forEach(function(k){ON.room=setPath(ON.room,d.path.replace(/\/$/,'')+'/'+k,d.data[k]);});
+      onRoom(ON.room);
+    };
+  };
+  es.addEventListener('put',on('put'));
+  es.addEventListener('patch',on('patch'));
+  es.addEventListener('cancel',function(){if(ON&&ON.es===es)leaveRoom('Le serveur refuse l’accès au salon.');});
+}
+// Depuis combien de temps la présence d'un joueur n'a pas bougé.
+function ageOf(uid,pl){
+  const now=Date.now(),v=pl[uid]?(pl[uid].seen||1):-1,s=ON.seen[uid];
+  if(!s||s.v!==v){ON.seen[uid]={v:v,at:now};return 0;}
+  return now-s.at;
+}
+function beat(){
+  if(!ON||!ON.room||!ON.room.meta)return;
+  const base='rooms/'+ON.code+'/';
+  const pl=ON.room.players||{};
+  if(pl[UID])api(base+'players/'+UID+'/seen','PUT',NOW).catch(noop);
+  else api(base+'players/'+UID,'PUT',{t:ON.t,seen:NOW}).catch(noop);
+  if(ON.host)api(base+'meta/hostSeen','PUT',NOW).catch(noop);
+}
+document.addEventListener('visibilitychange',function(){if(!document.hidden)beat();});
 function olErr(t){$('olErr').textContent=t||'';}
 // Message selon la cause : base verrouillée, script Firebase bloqué, ou pas de réseau.
 function netErr(e){
@@ -1379,82 +1430,57 @@ function genCode(){let c='';for(let i=0;i<4;i++)c+=CODE_ABC[Math.floor(Math.rand
 function olCreate(){
   const b=$('olCreate');if(isOff(b))return;
   olErr('');busy(b,true,'Création…');
-  fb().then(function(db){
-    let tries=0;
-    const attempt=function(){
-      const code=genCode(),now=Date.now();
-      return db.ref('rooms/'+code).transaction(function(cur){
-        // Un code déjà pris par un salon récent n'est pas réutilisé.
-        if(cur&&cur.meta&&now-(cur.meta.t||0)<6*3600e3)return;
-        const pl={};pl[UID]={t:now};
-        return {meta:{host:UID,hostOn:true,t:now,status:'lobby',ai:0,marbles:cfg.marbles},players:pl};
-      }).then(function(res){
-        if(res.committed&&res.snapshot.val()){busy(b,false);enterRoom(db,code,true);return;}
+  let tries=0;
+  const attempt=function(){
+    const code=genCode(),now=Date.now();
+    return api('rooms/'+code+'/meta').then(function(m){
+      // Un code déjà pris par un salon récent n'est pas réutilisé.
+      if(m&&now-(m.t||0)<6*3600e3){
         if(++tries<6)return attempt();
-        busy(b,false);olErr('Impossible de créer un salon. Réessaie.');
-      });
-    };
-    return attempt();
-  }).catch(function(e){busy(b,false);olErr(netErr(e));});
+        throw new Error('taken');
+      }
+      const pl={};pl[UID]={t:now,seen:NOW};
+      return api('rooms/'+code,'PUT',{meta:{host:UID,t:now,status:'lobby',ai:0,marbles:cfg.marbles,hostSeen:NOW},players:pl})
+        .then(function(){busy(b,false);enterRoom(code,true);});
+    });
+  };
+  attempt().catch(function(e){busy(b,false);olErr(e.message==='taken'?'Impossible de créer un salon. Réessaie.':netErr(e));});
 }
 function olJoin(){
   const b=$('olJoin');if(isOff(b))return;
   const code=$('olCode').value.toUpperCase().replace(/[^A-Z]/g,'');
   if(code.length!==4){olErr('Le code a 4 lettres.');return;}
   olErr('');busy(b,true,'Connexion…');
-  fb().then(function(db){
-    let why='';
-    return db.ref('rooms/'+code).transaction(function(cur){
-      why='';
-      // Pas encore de valeur connue : on laisse le serveur répondre avec le vrai salon.
-      if(cur===null)return null;
-      const m=cur.meta||{},pl=cur.players||{};
-      if(pl[UID])return cur;
-      if(m.status!=='lobby'){why='busy';return;}
-      if(Object.keys(pl).length+(m.ai||0)>=4){why='full';return;}
-      pl[UID]={t:Date.now()};cur.players=pl;
-      return cur;
-    }).then(function(res){
-      busy(b,false);
-      if(res.committed&&res.snapshot.val()){enterRoom(db,code,false);return;}
-      olErr(why==='busy'?'La partie a déjà commencé dans ce salon.':why==='full'?'Ce salon est complet.':'Aucun salon avec ce code.');
-    });
+  api('rooms/'+code).then(function(r){
+    if(!r||!r.meta){busy(b,false);olErr('Aucun salon avec ce code.');return;}
+    const pl=r.players||{};
+    if(!pl[UID]){
+      if(r.meta.status!=='lobby'){busy(b,false);olErr('La partie a déjà commencé dans ce salon.');return;}
+      if(Object.keys(pl).length+(r.meta.ai||0)>=4){busy(b,false);olErr('Ce salon est complet.');return;}
+    }
+    const t=Date.now();
+    return api('rooms/'+code+'/players/'+UID,'PUT',{t:t,seen:NOW}).then(function(){busy(b,false);enterRoom(code,false,t);});
   }).catch(function(e){busy(b,false);olErr(netErr(e));});
 }
 
-function enterRoom(db,code,host){
-  ON={db:db,code:code,host:host,ref:db.ref('rooms/'+code),room:null,t:Date.now(),gone:{},hostOn:true};
-  ON.connRef=db.ref('.info/connected');
-  // À chaque (re)connexion : on se réinscrit dans le salon et on prévient le serveur de notre départ éventuel.
-  ON.connH=ON.connRef.on('value',function(s){
-    if(!ON||s.val()!==true)return;
-    ON.ref.child('players/'+UID).onDisconnect().remove();
-    if(ON.host)ON.ref.child('meta/hostOn').onDisconnect().set(false);
-    const me=ON;
-    ON.ref.transaction(function(cur){
-      if(cur===null)return null;
-      if(!cur.meta)return;
-      cur.players=cur.players||{};
-      if(!cur.players[UID])cur.players[UID]={t:me.t};
-      if(me.host)cur.meta.hostOn=true;
-      return cur;
-    });
-  });
-  ON.ref.on('value',onRoom);
-  if(host)ON.tick=setInterval(hostTick,2000);
+function enterRoom(code,host,t){
+  ON={code:code,host:host,room:null,t:t||Date.now(),seen:{},hostOn:true,hostSeen:{v:null,at:Date.now()}};
+  openStream();
+  ON.beat=setInterval(beat,4000);
+  ON.tick=setInterval(host?hostTick:guestTick,2000);
   $('lbCode').textContent=code;
+  $('lbRoster').innerHTML='';
+  $('lbHint').textContent='';
   $('lbErr').textContent='';
   show('lobby');
 }
 function leaveRoom(msg){
   if(!ON)return;
   const o=ON;ON=null;
-  o.ref.off('value',onRoom);
-  o.connRef.off('value',o.connH);
-  if(o.tick)clearInterval(o.tick);
-  o.ref.child('players/'+UID).onDisconnect().cancel();
-  if(o.host){o.ref.child('meta/hostOn').onDisconnect().cancel();o.ref.remove();}
-  else if(!msg)o.ref.child('players/'+UID).remove();
+  if(o.es)o.es.close();
+  clearInterval(o.beat);clearInterval(o.tick);
+  if(o.host)api('rooms/'+o.code,'DELETE').catch(noop);
+  else if(!msg)api('rooms/'+o.code+'/players/'+UID,'DELETE').catch(noop);
   G=null;aim=null;paused=false;setRot(0);
   applyTune();
   $('note').hidden=true;
@@ -1497,7 +1523,7 @@ function syncLobby(){
     setDisabled($('lbStart'),t<2);
     $('lbErr').textContent=t<2?'Il faut au moins 2 places : attends un ami ou ajoute une IA.':'';
   }else{
-    $('lbWait').textContent=(m.hostOn===false?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+m.marbles+' billes par joueur.';
+    $('lbWait').textContent=(!ON.hostOn?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+m.marbles+' billes par joueur.';
     $('lbErr').textContent='';
   }
 }
@@ -1516,16 +1542,9 @@ function note(t,ms){
   if(ms!==0)noteT=setTimeout(function(){n.hidden=true;},ms||3500);
 }
 
-function onRoom(snap){
+function onRoom(r){
   if(!ON)return;
-  const r=snap.val();
   if(!r||!r.meta){leaveRoom(ON.host?'Le salon a été fermé.':'Le salon a été fermé par l’hôte.');return;}
-  ON.room=r;
-  const hostOn=r.meta.hostOn!==false;
-  if(hostOn!==ON.hostOn&&!ON.host&&G&&G.gid){
-    note(hostOn?'L’hôte est de retour.':'L’hôte s’est déconnecté. La partie reprend à son retour.',hostOn?2500:0);
-  }
-  ON.hostOn=hostOn;
   if(r.meta.status==='game'&&r.game){
     if(!G||G.gid!==r.game.id)startOnline(r);
     else onlineUpdate(r);
@@ -1543,12 +1562,12 @@ function hostStart(){
   if(n<2)return;
   const seats=c.order.concat(new Array(c.ai).fill('ai'));
   const z=new Array(n).fill(0);
-  ON.ref.update({
+  put('',{
     'meta/status':'game',
     game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,ai:seats.map(function(s){return s==='ai';}),tune:curTune()},
     state:{seq:0,turn:0,thrown:z,lost:z,done:false},
     throw:null
-  });
+  },'PATCH');
 }
 function startOnline(r){
   const g=r.game,tu=g.tune||{};
@@ -1608,7 +1627,7 @@ function olThrow(p,ux,uy,v){
   const seq=G.seq+1;
   G.rollSeq=seq;
   launch(p,ux,uy,v);
-  ON.ref.child('throw').set({seq:seq,p:p,ux:ux,uy:uy,v:v});
+  put('throw',{seq:seq,p:p,ux:ux,uy:uy,v:v});
 }
 // Billes arrêtées : l'hôte publie le nouvel état, les autres l'attendent.
 function olSettled(){
@@ -1625,21 +1644,35 @@ function olSettled(){
       return [m.owner,rd(m.x,100),rd(m.y,100),rd(m.roll,10),rd(m.dir,1000)];
     })
   };
-  ON.ref.child('state').set(st);
+  put('state',st);
 }
-// L'hôte remplace par une IA tout joueur absent du salon depuis plus de 8 secondes.
+// Hôte : une IA remplace un joueur silencieux depuis 12 s ; dans le salon, il retire les joueurs partis.
 function hostTick(){
-  if(!ON||!ON.host||!ON.room||!G||!G.gid)return;
-  const r=ON.room,pl=r.players||{},g=r.game;
-  if(!g)return;
-  const ai=(g.ai||[]).slice();let ch=false;
-  g.seats.forEach(function(u,i){
-    if(ai[i]||u===UID)return;
-    if(pl[u]){delete ON.gone[u];return;}
-    if(!ON.gone[u])ON.gone[u]=Date.now();
-    else if(Date.now()-ON.gone[u]>8000){ai[i]=true;ch=true;}
-  });
-  if(ch)ON.ref.child('game/ai').set(ai);
+  if(!ON||!ON.host||!ON.room||!ON.room.meta)return;
+  const r=ON.room,pl=r.players||{};
+  if(G&&G.gid&&r.game){
+    const g=r.game,ai=(g.ai||[]).slice();let ch=false;
+    g.seats.forEach(function(u,i){
+      if(ai[i]||u===UID)return;
+      if(ageOf(u,pl)>12000){ai[i]=true;ch=true;}
+    });
+    if(ch)put('game/ai',ai);
+  }else if(r.meta.status==='lobby'){
+    Object.keys(pl).forEach(function(u){
+      if(u!==UID&&ageOf(u,pl)>15000){delete ON.seen[u];api('rooms/'+ON.code+'/players/'+u,'DELETE').catch(noop);}
+    });
+  }
+}
+// Invité : l'hôte est considéré parti s'il ne s'est pas signalé depuis 15 s.
+function guestTick(){
+  if(!ON||ON.host||!ON.room||!ON.room.meta)return;
+  const v=ON.room.meta.hostSeen||0,s=ON.hostSeen;
+  if(s.v!==v){s.v=v;s.at=Date.now();}
+  const on=Date.now()-s.at<15000;
+  if(on===ON.hostOn)return;
+  ON.hostOn=on;
+  if(G&&G.gid)note(on?'L’hôte est de retour.':'L’hôte s’est déconnecté. La partie reprend à son retour.',on?2500:0);
+  else if(view==='lobby')syncLobby();
 }
 
 $('goOnline').addEventListener('click',function(){olErr('');show('online');});
@@ -1664,14 +1697,14 @@ $('lbCopy').addEventListener('click',function(){
   $('lbAi'+n).addEventListener('click',function(){
     if(!ON||!ON.host||!ON.room)return;
     if(n>4-lobbyCounts(ON.room).h)return;
-    ON.ref.child('meta/ai').set(n);
+    put('meta/ai',n);
   });
 });
 function lbMarbles(d){
   if(!ON||!ON.host||!ON.room)return;
   const v=Math.max(3,Math.min(15,(ON.room.meta.marbles||10)+d));
   cfg.marbles=v;saveCfg();
-  ON.ref.child('meta/marbles').set(v);
+  put('meta/marbles',v);
 }
 $('lbMinus').addEventListener('click',function(){if(!isOff(this))lbMarbles(-1);});
 $('lbPlus').addEventListener('click',function(){if(!isOff(this))lbMarbles(1);});
