@@ -219,13 +219,16 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .steps i[data-on="1"]{background:var(--ink);border-color:var(--ink)}
 .step:not([hidden]){animation:screenIn .25s cubic-bezier(.2,.8,.2,1) both}
 .step legend{padding:0;margin-bottom:var(--space-3)}
-.bdlist{display:grid;gap:var(--space-3)}
+.bdlist{display:grid;gap:var(--space-3);grid-auto-rows:1fr}
 .bdcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-4);width:100%;box-sizing:border-box;padding:var(--space-3) var(--space-4) var(--space-3) var(--space-3);border:3px solid var(--line);border-radius:var(--radius-lg);background:var(--card);color:var(--ink);text-align:left;font:inherit;min-height:var(--target-primary)}
 .bdcard:active{transform:scale(.98)}
 .bdcard:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
 .bdcard[aria-pressed="true"]{background:var(--soleil);color:var(--on-color);border-color:var(--on-color)}
-.bdcard[aria-pressed="true"]::after{content:"✓";font:700 1.5rem/1 var(--font-body)}
+.bdcard::after{content:"✓";width:1.5rem;text-align:center;font:700 1.5rem/1 var(--font-body);visibility:hidden}
+.bdcard[aria-pressed="true"]::after{visibility:visible}
 .bdcard__pv{display:block;width:96px;height:96px;flex:none}
+@media (max-height:720px),(max-width:380px){.bdcard__pv{width:72px;height:72px}.bdcard{gap:var(--space-3)}.bdcard__tx strong{font-size:1.25rem}}
+@media (max-height:720px){.bdcard{padding-block:var(--space-2)}#scr-play .panel{gap:var(--space-4)}}
 .bdcard__pv svg{width:100%;height:100%;display:block}
 .bdcard__tx{display:grid;gap:var(--space-1);min-width:0}
 .bdcard__tx strong{font:400 1.375rem/1.1 var(--font-display)}
@@ -235,6 +238,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .pvspin{transform-origin:50px 50px;animation:pvspin 24s linear infinite}
 @keyframes pvspin{to{transform:rotate(360deg)}}
 /* Comment jouer, dans À propos */
+.teamchip{margin-top:var(--space-1);min-height:40px;padding:0 14px;font-size:1rem}
 .howto{margin:var(--space-3) 0 var(--space-4);border:3px solid var(--line);border-radius:var(--radius-lg);padding:0 var(--space-4)}
 .howto summary{min-height:var(--target-primary);display:flex;align-items:center;font:400 1.25rem/1.2 var(--font-display);cursor:pointer}
 .howto summary:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
@@ -257,6 +261,26 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .err:empty{display:none}
 .note{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);box-sizing:border-box;width:max-content;max-width:min(20rem,84%);padding:var(--space-3) var(--space-5);border-radius:var(--radius-lg);background:var(--soleil);color:var(--on-color);font:700 1.0625rem/1.35 var(--font-body);text-align:center;pointer-events:none}
 :root[data-mr="contraste"] .note,:root[data-mr="contraste"] .mr-input{border:3px solid var(--ink)}
+/* Premium Edition : éléments grisés avec une couronne, page d'achat */
+.crown{display:inline-flex;vertical-align:middle;margin-left:8px;width:1.15em;height:1.15em;flex:none}
+.crown svg{width:100%;height:100%;display:block}
+.mr-btn .crown{margin-left:0}
+.trial{display:inline-block;vertical-align:middle;margin-left:8px;padding:2px 10px;border:2px solid var(--on-color);border-radius:var(--radius-pill);background:var(--soleil);color:var(--on-color);font:700 .8125rem/1.3 var(--font-body)}
+.mr-btn .trial{margin-left:0}
+.bdcard.is-locked{background:var(--bg-lilas);border-style:dashed}
+.bdcard.is-locked .bdcard__pv{filter:grayscale(1);opacity:.55}
+.bdcard.is-locked .bdcard__d{color:var(--ink-soft)}
+.mr-btn.is-locked{--b:var(--bg-lilas);--f:var(--ink-soft);--bd:var(--line);border-style:dashed}
+.prem-card{display:grid;gap:var(--space-4)}
+.prem-crown{width:72px;height:72px}
+.prem-crown svg{width:100%;height:100%;display:block}
+.prem-list{margin:0;padding:0;list-style:none;display:grid;gap:var(--space-3)}
+.prem-list li{display:grid;grid-template-columns:auto 1fr;gap:var(--space-3);align-items:start;font:700 1.125rem/1.3 var(--font-body)}
+.prem-list li::before{content:"✓";font:700 1.25rem/1.2 var(--font-body)}
+.prem-price{font:400 2.5rem/1 var(--font-display)}
+.prem-price span{font:700 1rem/1.3 var(--font-body)}
+.prem-set{margin-top:var(--space-5);display:grid;gap:var(--space-3)}
+:root[data-mr="contraste"] .prem-set{border-color:var(--ink)}
 :root[data-calm] *{animation:none!important;transition:none!important}
 </style>
 
@@ -294,11 +318,19 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
           <div class="bdlist" role="group" aria-label="Choix du mode de jeu">
             <button type="button" id="mdTactics" class="bdcard" aria-pressed="true">
               <span class="bdcard__pv" data-md="tactics"></span>
-              <span class="bdcard__tx"><strong>Tactics</strong><span class="bdcard__d">Chacun son tour, avec un nombre fixe de billes. Les power-ups sont en option.</span></span>
+              <span class="bdcard__tx"><strong>Tactics</strong><span class="bdcard__d">Chacun son tour, avec un nombre fixe de billes.</span></span>
             </button>
             <button type="button" id="mdRush" class="bdcard" aria-pressed="false">
               <span class="bdcard__pv" data-md="rush"></span>
-              <span class="bdcard__tx"><strong>Rush</strong><span class="bdcard__d">Un chrono commun, des billes à l’infini, tout le monde lance en même temps. Les points tombent à la fin.</span></span>
+              <span class="bdcard__tx"><strong>Rush</strong><span class="bdcard__d">Un chrono, tout le monde lance en même temps.</span></span>
+            </button>
+            <button type="button" id="mdPetanque" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="petanque"></span>
+              <span class="bdcard__tx"><strong>Pétanque</strong><span class="bdcard__d">Un cochonet, 3 billes par joueur. Premier à 13 points.</span></span>
+            </button>
+            <button type="button" id="mdSniper" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="sniper"></span>
+              <span class="bdcard__tx"><strong>Sniper</strong><span class="bdcard__d">Va le plus loin possible, mais pas dans le vide. Chaque tir marque tout de suite.</span></span>
             </button>
           </div>
         </fieldset>
@@ -312,6 +344,14 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
             <button type="button" id="rt60" class="mr-chip" aria-pressed="false">60 secondes</button>
           </div>
           <p class="hint">Un compte à rebours de 3 secondes précède le départ.</p>
+        </fieldset>
+        <fieldset class="field" id="ptField" hidden>
+          <legend class="t-m">Format</legend>
+          <div class="chips" role="group" aria-label="Format de la pétanque">
+            <button type="button" id="ptSolo" class="mr-chip" aria-pressed="true">Individuel</button>
+            <button type="button" id="ptTeams" class="mr-chip" aria-pressed="false">Par équipes</button>
+          </div>
+          <p id="ptHint" class="hint"></p>
         </fieldset>
         <fieldset class="field" id="fsMarbles">
           <legend class="t-m">Billes par joueur</legend>
@@ -337,15 +377,15 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
           <div class="bdlist" role="group" aria-label="Choix du plateau">
             <button type="button" id="bdCible" class="bdcard" aria-pressed="true">
               <span class="bdcard__pv" data-bd="cible"></span>
-              <span class="bdcard__tx"><strong>Cible de la mort</strong><span class="bdcard__d">Trois anneaux autour d’un trou. Une bille qui tombe dedans est perdue.</span></span>
+              <span class="bdcard__tx"><strong>Cible de la mort</strong><span class="bdcard__d">Trois anneaux autour d’un trou : dedans, la bille est perdue.</span></span>
             </button>
             <button type="button" id="bdMorpion" class="bdcard" aria-pressed="false">
               <span class="bdcard__pv" data-bd="morpion"></span>
-              <span class="bdcard__tx"><strong>Morpion</strong><span class="bdcard__d">Un carré de 25 zones, de −20 à 100 points. Le centre rapporte gros, mais le bord fait perdre des points. Pas de trou.</span></span>
+              <span class="bdcard__tx"><strong>Morpion</strong><span class="bdcard__d">Carré de 25 zones, de −20 à 100 points. Pas de trou.</span></span>
             </button>
             <button type="button" id="bdSpin" class="bdcard" aria-pressed="false">
               <span class="bdcard__pv" data-bd="tournante"></span>
-              <span class="bdcard__tx"><strong>Cible tournante</strong><span class="bdcard__d">La cible de base, sur un plateau qui tourne lentement. Il entraîne les billes : les tirs dévient.</span></span>
+              <span class="bdcard__tx"><strong>Cible tournante</strong><span class="bdcard__d">La cible de base sur un plateau qui tourne : les tirs dévient.</span></span>
             </button>
           </div>
         </fieldset>
@@ -397,6 +437,29 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
     </div>
   </section>
 
+  <section id="scr-premium" class="screen" aria-label="Marble Rush Premium Edition" hidden>
+    <div class="panel">
+      <header class="head">
+        <p class="lbl">Débloque tout le jeu</p>
+        <h2 class="t-l" data-focus>Marble Rush Premium Edition</h2>
+      </header>
+      <div class="mr-card mr-card--soleil prem-card">
+        <div class="prem-crown" id="premCrown" aria-hidden="true"></div>
+        <ul class="prem-list">
+          <li>Le mode en ligne, pour jouer à distance avec tes amis</li>
+          <li>Les modes Rush, Pétanque et Sniper</li>
+          <li>Les plateaux Morpion et Cible tournante, dans chaque mode</li>
+        </ul>
+        <p class="prem-price">1,99 € <span>en une seule fois</span></p>
+      </div>
+      <p id="premMsg" class="hint" aria-live="polite"></p>
+      <div class="actions">
+        <button type="button" id="premBuy" class="mr-btn">Débloquer pour 1,99 €</button>
+        <button type="button" id="premBack" class="mr-btn mr-btn--quiet">Plus tard</button>
+      </div>
+    </div>
+  </section>
+
   <section id="scr-settings" class="screen" aria-label="Réglages" hidden>
     <div class="panel">
       <header class="head">
@@ -418,34 +481,26 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       <button type="button" id="tgCalm" class="mr-toggle" role="switch" aria-checked="false">
         <span>Réduire les animations</span><span class="mr-switch" aria-hidden="true">Non</span>
       </button>
-      <button type="button" id="openPhys" class="mr-btn mr-btn--quiet">Réglages physiques</button>
+      <section class="mr-card prem-set" aria-labelledby="ps-h">
+        <h3 id="ps-h" class="t-m">Premium Edition</h3>
+        <p id="psState" class="hint"></p>
+        <button type="button" id="psRestore" class="mr-btn mr-btn--quiet">Restaurer l’achat</button>
+        <button type="button" id="psFree" class="mr-btn mr-btn--quiet">Repasser en version gratuite</button>
+        <p id="psMsg" class="hint" aria-live="polite"></p>
+      </section>
       <section class="mr-card about" aria-labelledby="about-h">
         <h3 id="about-h" class="t-m">À propos</h3>
-        <details class="howto"><summary>Comment jouer</summary><div id="howto"></div></details>
+        <div class="howto" style="border:0;padding:0"><h4 style="margin:var(--space-3) 0 var(--space-2);font:400 1.25rem/1.2 var(--font-display)">Comment jouer</h4><div id="howto"></div></div>
         <dl class="about__list">
-          <div><dt>Nom</dt><dd>Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.89</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793400144-5820</dd></div>
-          <div><dt>Dernière modification</dt><dd>30/10/2026</dd></div>
+          <div><dt>Nom</dt><dd id="abName">Marble Rush</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.109</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793462390-5200</dd></div>
+          <div><dt>Dernière modification</dt><dd>31/10/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
       </section>
       <div class="actions">
         <button type="button" id="setBack" class="mr-btn">Retour</button>
-      </div>
-    </div>
-  </section>
-
-  <section id="scr-physics" class="screen" aria-label="Réglages physiques" hidden>
-    <div class="panel">
-      <header class="head">
-        <h2 class="t-l" data-focus>Physique</h2>
-        <p class="hint">Tes changements comptent tout de suite et restent sur cet appareil.</p>
-      </header>
-      <div class="mr-card"><div id="tuneRows" class="trows"></div></div>
-      <div class="actions">
-        <button type="button" id="setReset" class="mr-btn mr-btn--quiet">Valeurs d’origine</button>
-        <button type="button" id="physBack" class="mr-btn">Retour</button>
       </div>
     </div>
   </section>
@@ -588,6 +643,19 @@ let VMAX=2400;          // vitesse d'un lancer à pleine puissance
 const L_FULL=0.68;     // longueur de glissement (en rayons du plateau) pour la pleine puissance
 const L_MIN=0.1;        // en dessous, le lancer est annulé
 const POWER_EXP=2;      // courbe de puissance (plus fin pour les lancers moyens)
+// Pétanque : une piste rectangulaire (demi-largeur PW, demi-longueur PL), un départ au bas et un cochonet (petite bille légère).
+const PET_BOOST=1.25; // Pétanque : le tir maximal est 1,25 fois plus rapide qu'en Tactics
+const PW=330,PL=1000,PANCH=850,COCH_R=30,CZONE=450; // CZONE : le cochonet ne peut pas passer sous cette ligne (zone proche du cercle de lancer)
+// Sniper : la piste de la pétanque, découpée en zones de points. Tout au bout (y < SN_VOID), c'est le vide : la bille tombe et ne rapporte rien.
+const SN_VOID=-860;     // limite du vide
+const SN_HALF=70;       // première moitié de la piste (y > SN_HALF) : 5 points
+const SN_ZW=95;         // hauteur des zones de 10 à 90 ; la zone 100, plus fine, fait 75
+function snScore(y){
+  if(y<=SN_VOID)return 0;
+  if(y>SN_HALF)return 5;
+  const k=Math.ceil((SN_HALF-y)/SN_ZW);
+  return k>=10?100:10*Math.max(1,k);
+}
 const FALL_T=0.45;      // durée de la chute dans le trou
 // Plateau « Morpion » : un carré de 5x5 zones, sans trou. Les points sont lus ligne par ligne (haut en bas).
 // Le carré a le même encombrement que le cercle (côté 2 WR) ; la grille de scores est au centre.
@@ -624,6 +692,7 @@ function makeMarble(owner,x,y,vx,vy){
   return {owner:owner,x:x,y:y,vx:vx,vy:vy,roll:0,dir:0,fall:-1,entered:false,out:false,rides:false,r:MR,mass:1,magnet:false,magT:0,bomb:false};
 }
 function scoreOf(x,y){
+  if(BOARD==='sniper')return Math.abs(x)>PW?0:snScore(y);
   if(BOARD==='morpion'){
     const ax=Math.abs(x),ay=Math.abs(y);
     if(ax>GQ||ay>GQ)return 0;
@@ -675,9 +744,12 @@ function pairHit(a,b){
 function stepPhysics(ms,dt){
   const lost=[];
   const w=BOARD==='tournante'?OMEGA:0;
+  const pet=BOARD==='petanque',sn=BOARD==='sniper';
   for(let i=0;i<ms.length;i++){
     const m=ms[i];
     if(m.fall>=0){
+      // Chute dans le vide (Sniper) : la bille garde son élan en rétrécissant.
+      if(m.vf){m.fall+=dt;m.x+=m.vx*dt;m.y+=m.vy*dt;m.roll+=Math.hypot(m.vx,m.vy)*dt;const ff=Math.max(0,1-2.5*dt);m.vx*=ff;m.vy*=ff;continue;}
       // Chute en spirale dans l'entonnoir : la bille tourne de plus en plus vite et se rapproche du centre.
       m.fall+=dt;
       const t=Math.min(1,m.fall/FALL_T);
@@ -728,6 +800,25 @@ function stepPhysics(ms,dt){
     const m=ms[i];
     if(m.fall>=0)continue;
     const lim=WR-m.r;
+    if(sn){
+      // Piste de Sniper : murs à gauche, à droite et derrière le lanceur ; au bout, le vide avale la bille.
+      const lx=PW-m.r,ly=PL-m.r;
+      if(m.x>lx){m.x=lx;if(m.vx>0){if(REC&&m.vx>40)REC.push(['w',m.vx]);m.vx=-m.vx*E_WALL;}}
+      else if(m.x<-lx){m.x=-lx;if(m.vx<0){if(REC&&m.vx<-40)REC.push(['w',-m.vx]);m.vx=-m.vx*E_WALL;}}
+      if(m.y>ly){m.y=ly;if(m.vy>0){if(REC&&m.vy>40)REC.push(['w',m.vy]);m.vy=-m.vy*E_WALL;}}
+      if(m.y<SN_VOID){m.fall=0;m.vf=true;m.rides=false;if(REC)REC.push(['f']);}
+      continue;
+    }
+    if(pet){
+      // Piste entourée de murs : les billes et le cochonet rebondissent dessus.
+      const lx=PW-m.r,ly=PL-m.r;
+      if(m.coch&&m.y>CZONE-m.r){m.y=CZONE-m.r;if(m.vy>0)m.vy=-m.vy*E_WALL;} // zone interdite au cochonet
+      if(m.x>lx){m.x=lx;if(m.vx>0){if(REC&&m.vx>40)REC.push(['w',m.vx]);m.vx=-m.vx*E_WALL;}}
+      else if(m.x<-lx){m.x=-lx;if(m.vx<0){if(REC&&m.vx<-40)REC.push(['w',-m.vx]);m.vx=-m.vx*E_WALL;}}
+      if(m.y>ly){m.y=ly;if(m.vy>0){if(REC&&m.vy>40)REC.push(['w',m.vy]);m.vy=-m.vy*E_WALL;}}
+      else if(m.y<-ly){m.y=-ly;if(m.vy<0){if(REC&&m.vy<-40)REC.push(['w',-m.vy]);m.vy=-m.vy*E_WALL;}}
+      continue;
+    }
     if(BOARD==='morpion'){
       // Murs droits : la bille est entrée quand elle est passée à l'intérieur du carré.
       const lq=WQ-m.r;
@@ -752,27 +843,27 @@ function stepPhysics(ms,dt){
     if(nb<=48){
       for(let i=0;i<nb;i++){
         const a=ms[i];
-        if(a.fall>=0)continue;
-        for(let j=i+1;j<nb;j++){const b=ms[j];if(b.fall>=0)continue;pairHit(a,b);}
+        if(a.fall>=0||(pet&&a.out))continue;
+        for(let j=i+1;j<nb;j++){const b=ms[j];if(b.fall>=0||(pet&&b.out))continue;pairHit(a,b);}
       }
     }else{
       // Beaucoup de billes (mode Rush) : une grille ne laisse tester que les voisines.
       const CS=4*MR,cells=new Map();
       for(let i=0;i<nb;i++){
         const a=ms[i];
-        if(a.fall>=0)continue;
+        if(a.fall>=0||(pet&&a.out))continue;
         const k=(Math.floor(a.x/CS)+64)*256+Math.floor(a.y/CS)+64,l=cells.get(k);
         if(l)l.push(i);else cells.set(k,[i]);
       }
       for(let i=0;i<nb;i++){
         const a=ms[i];
-        if(a.fall>=0)continue;
+        if(a.fall>=0||(pet&&a.out))continue;
         const gx=Math.floor(a.x/CS)+64,gy=Math.floor(a.y/CS)+64;
         for(let ox=-1;ox<=1;ox++){
           for(let oy=-1;oy<=1;oy++){
             const l=cells.get((gx+ox)*256+gy+oy);
             if(!l)continue;
-            for(let q=0;q<l.length;q++){const j=l[q];if(j>i)pairHit(a,ms[j]);}
+            for(let q=0;q<l.length;q++){const j=l[q];if(j>i&&!(pet&&ms[j].out))pairHit(a,ms[j]);}
           }
         }
       }
@@ -1110,29 +1201,98 @@ function rollSound(level){
 }
 
 /* ---------- Partie ---------- */
-let cfg={humans:2,marbles:10,ai:0,board:'cible',power:false,names:['','','',''],me:'',mode:'tactics',rushT:30};
+let cfg={humans:2,marbles:10,ai:0,board:'cible',power:false,names:['','','',''],me:'',mode:'tactics',rushT:30,pFormat:'solo',teams:[0,1,0,1]};
 try{
   const s=JSON.parse(localStorage.getItem('marble-mixer-cfg')||'null');
   if(s&&s.marbles>=3&&s.marbles<=15){
     const h=Math.max(1,Math.min(4,Number(s.humans||s.players)||2));
     // Anciennes sauvegardes : ai valait vrai/faux (vrai = table complétée à 4).
     const a=s.ai===true?4-h:Math.max(0,Math.min(4-h,Number(s.ai)||0));
-    cfg={humans:h,marbles:s.marbles,ai:a,board:(s.board==='morpion'||s.board==='tournante')?s.board:'cible',power:s.power===true,names:[0,1,2,3].map(function(k){return cleanName(Array.isArray(s.names)?s.names[k]:'');}),me:cleanName(s.me),mode:s.mode==='rush'?'rush':'tactics',rushT:s.rushT===60?60:30};
+    cfg={humans:h,marbles:s.marbles,ai:a,board:(s.board==='morpion'||s.board==='tournante')?s.board:'cible',power:s.power===true,names:[0,1,2,3].map(function(k){return cleanName(Array.isArray(s.names)?s.names[k]:'');}),me:cleanName(s.me),mode:(s.mode==='rush'||s.mode==='petanque'||s.mode==='sniper')?s.mode:'tactics',rushT:s.rushT===60?60:30,pFormat:s.pFormat==='teams'?'teams':'solo',teams:(Array.isArray(s.teams)&&s.teams.length===4)?s.teams.map(function(x){return x===1?1:0;}):[0,1,0,1]};
   }
 }catch(e){}
 function saveCfg(){try{localStorage.setItem('marble-mixer-cfg',JSON.stringify(cfg));}catch(e){}}
+
+/* ---------- Premium Edition (achat fictif, 1,99 €) ---------- */
+// BOUGHT : l'achat est enregistré ; PREM : la version Premium est active (on peut repasser en gratuit sans perdre l'achat).
+let PREM=false,BOUGHT=false,premFrom='home';
+try{BOUGHT=localStorage.getItem('marble-rush-premium')==='1';PREM=BOUGHT&&localStorage.getItem('marble-rush-premium-on')!=='0';}catch(e){}
+function savePrem(){try{localStorage.setItem('marble-rush-premium',BOUGHT?'1':'0');localStorage.setItem('marble-rush-premium-on',PREM?'1':'0');}catch(e){}}
+// Essais gratuits : chaque mode et chaque plateau Premium se joue une fois en version gratuite (compté à la fin de la partie).
+let TRIALS={};
+try{TRIALS=JSON.parse(localStorage.getItem('marble-rush-trials')||'{}')||{};}catch(e){TRIALS={};}
+function trialUsed(k){return !!TRIALS[k];}
+function markTrial(k){TRIALS[k]=1;try{localStorage.setItem('marble-rush-trials',JSON.stringify(TRIALS));}catch(e){}}
+// Les éléments Premium que la partie choisie fait jouer (le plateau ne compte que pour Tactics et Rush).
+function trialKeys(){
+  const k=[];
+  if(cfg.mode!=='tactics')k.push(cfg.mode);
+  if((cfg.mode==='tactics'||cfg.mode==='rush')&&(cfg.board==='morpion'||cfg.board==='tournante'))k.push(cfg.board);
+  return k;
+}
+// Ouvre la page Premium si l'élément a déjà servi son essai gratuit.
+function premOk(k){
+  if(PREM||!trialUsed(k))return true;
+  openPremium();
+  return false;
+}
+// En version gratuite : un mode ou un plateau Premium dont l'essai est passé redevient Tactics / Cible de la mort.
+function enforceFree(){
+  if(PREM)return;
+  if(cfg.mode!=='tactics'&&trialUsed(cfg.mode))cfg.mode='tactics';
+  if(cfg.board!=='cible'&&trialUsed(cfg.board))cfg.board='cible';
+}
+enforceFree();
+const CROWN_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" style="fill:var(--soleil);stroke:var(--on-color);stroke-width:1.6;stroke-linejoin:round"/></svg>';
+function setLock(id,locked,trial){
+  const b=$(id);
+  if(!b)return;
+  b.classList.toggle('is-locked',locked);
+  Array.prototype.forEach.call(b.querySelectorAll('.crown,.trial'),function(n){n.remove();});
+  const host=b.querySelector('strong')||b;
+  if(locked)host.insertAdjacentHTML('beforeend','<span class="crown">'+CROWN_SVG+'<span class="sr">Réservé à Premium</span></span>');
+  else if(trial)host.insertAdjacentHTML('beforeend','<span class="trial">1 essai<span class="sr"> gratuit, puis réservé à Premium</span></span>');
+}
+function syncPrem(){
+  setLock('goOnline',!PREM,false);
+  [['mdRush','rush'],['mdPetanque','petanque'],['mdSniper','sniper'],['bdMorpion','morpion'],['bdSpin','tournante']].forEach(function(x){
+    const used=trialUsed(x[1]);
+    setLock(x[0],!PREM&&used,!PREM&&!used);
+  });
+  const ab=$('abName');if(ab)ab.textContent=PREM?'Marble Rush Premium Edition':'Marble Rush';
+  const st=$('psState');
+  if(st)st.textContent=PREM?'Premium Edition activée : tout est débloqué.':(BOUGHT?'Version gratuite active. Ton achat est enregistré : tu peux le restaurer.':'Version gratuite : Tactics et la Cible de la mort, plus un essai de chaque mode et plateau Premium.');
+  if($('psRestore')){setDisabled($('psRestore'),PREM);setDisabled($('psFree'),!PREM);}
+  if($('premBuy')){
+    $('premBuy').hidden=PREM;
+    $('premBack').textContent=PREM?'Continuer':'Plus tard';
+    $('premMsg').textContent=PREM?'Premium Edition est débloquée. Merci !':'Achat de démonstration : aucun paiement réel n’est demandé.';
+    $('premCrown').innerHTML=CROWN_SVG;
+  }
+}
+function openPremium(){
+  if(view!=='premium')premFrom=view;
+  show('premium');
+}
 
 let G=null,aim=null,paused=false,view='home',settingsFrom='home';
 let raims=[]; // Rush : un geste de visée par joueur, tous en même temps
 const flash=[0,0,0,0];
 let W=0,H=0,DPR=1,portrait=true,cx=0,cy=0,S=1;
 const HW=160,HH=80; // cadre d'un joueur sur le plateau (avant mise à l'échelle)
+const PET_RIGHT=Math.round(HW*0.72)+18; // largeur réservée aux cadres des joueurs inactifs (pétanque)
 
 // Nombre de places autour du plateau : les humains, puis les IA (4 places au maximum).
 function seatCount(){return cfg.humans+cfg.ai;}
 function seatAI(){const s=[];for(let p=0;p<seatCount();p++)s.push(p>=cfg.humans);return s;}
 function np(){return G?G.players:seatCount();}
-function pcol(p){return T[CHARS[p].col];}
+// Pétanque et Sniper : une piste verticale, le joueur actif en bas et les autres à droite.
+function railMode(){return !!G&&(G.mode==='petanque'||G.mode==='sniper');}
+// Pétanque par équipes : les billes et les cadres prennent la couleur de l'équipe (A rouge, B bleue) ; le symbole reste celui du joueur.
+function pcol(p){
+  if(railMode()&&G.pt&&G.pt.teams)return T[G.pt.sideOf[p]===1?'ciel':'tomate'];
+  return T[CHARS[p].col];
+}
 // Noms des joueurs : texte nettoyé, 12 caractères au plus ; vide = nom du personnage.
 function cleanName(v){
   return Array.from(String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim()).slice(0,12).join('').trim();
@@ -1152,6 +1312,15 @@ function layout(){
   DPR=Math.min(window.devicePixelRatio||1,2.5);
   cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);
   W=w;H=h;portrait=H>=W;
+  if(railMode()){
+    // Pétanque et Sniper : la piste occupe la gauche et le centre ; le cadre actif est en bas, les autres à droite.
+    const rightW=PET_RIGHT,top=62,bot=H-134,Ht=Math.max(200,bot-top);
+    S=Math.min(Ht/(2*PL),(W-rightW-8)/(2*PW));
+    cx=(W-rightW)/2;cy=top+Ht/2;
+    setRot(0);
+    $('pauseBtn').className='mr-btn pausebtn pb-tl';
+    return;
+  }
   // Sur mobile, la zone qui rapporte des points est plus grande : le liseret peut sortir de l'écran.
   const mobile=Math.min(W,H)<600;
   let R=Math.min(W,H)/2-8;
@@ -1219,6 +1388,7 @@ function slotAt(x,y){
   return best;
 }
 function anchorOf(p){
+  if(railMode())return {x:0,y:PANCH};
   const lim=WR+MR+22; // départ juste à l'extérieur du grand cercle
   const deg=(G.seats?worldSeats(G.players):seatAngles(G.players))[p];
   const t=deg*Math.PI/180;
@@ -1233,6 +1403,13 @@ function anchorOf(p){
   return {x:lim*Math.cos(t),y:lim*Math.sin(t)};
 }
 function hudSpec(p){
+  if(railMode()){
+    // Le joueur actif est en bas ; les autres, plus petits, sont empilés sur la droite.
+    if(p===petActive())return {x:W/2,y:H-48-HH/2,rot:0,sc:1};
+    const sc2=0.72,hw=HW*sc2,hh=HH*sc2,act=petActive();
+    let k=0;for(let q=0;q<p;q++){if(q!==act)k++;}
+    return {x:W-8-hw/2,y:62+k*(hh+12)+hh/2,rot:0,sc:sc2};
+  }
   const m=48; // place réservée au message « À toi ! », à l'extérieur de chaque cadre
   const a=seatAngles(G.players)[p];
   const sc=hudSc(),hx=m+HW*sc/2,hy=m+HH*sc/2;
@@ -1255,7 +1432,9 @@ function turnText(){
 function say(t){$('live').textContent=t;}
 
 function startGame(){
-  BOARD=(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible';
+  if(!PREM&&trialKeys().some(trialUsed)){openPremium();return;}
+  if((cfg.mode==='petanque'||cfg.mode==='sniper')&&!petTeamsOk())return;
+  BOARD=cfg.mode==='petanque'?'petanque':cfg.mode==='sniper'?'sniper':((cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible');
   SPIN=0;sndReset();
   G={
     players:seatCount(),N:cfg.marbles,marbles:[],isAI:seatAI(),names:seatNames(),
@@ -1268,7 +1447,7 @@ function startGame(){
     awarded:0,bomb:null,bombT:0,fx:null,shake:0,award:null
   };
   raims=[];
-  G.mode=cfg.mode==='rush'?'rush':'tactics';
+  G.mode=(cfg.mode==='rush'||cfg.mode==='petanque'||cfg.mode==='sniper')?cfg.mode:'tactics';
   if(G.mode==='rush'){
     // Rush : compte à rebours, puis chrono commun ; pas de tour, pas de power-ups, billes illimitées.
     G.power=false;G.phase='rush';
@@ -1276,11 +1455,354 @@ function startGame(){
     G.cool=new Array(seatCount()).fill(0);
     G.aiT=G.isAI.map(function(){return 0.4+Math.random()*0.7;});
   }
+  if(G.mode==='petanque')petInit();
+  if(G.mode==='sniper')snInit();
   aim=null;paused=false;
   for(let i=0;i<4;i++)flash[i]=0;
   show('game');
   layout();
-  say(G.mode==='rush'?'Rush : '+cfg.rushT+' secondes. Prêts ?':turnText());
+  say(G.mode==='rush'?'Rush : '+cfg.rushT+' secondes. Prêts ?':(G.mode==='petanque'?'Pétanque. Manche 1. '+turnText():(G.mode==='sniper'?'Sniper. '+turnText():turnText())));
+}
+// ---------- Pétanque ----------
+function petTeamsOk(){
+  const n=seatCount();
+  if(n<2)return true; // seul : entraînement
+  if(cfg.pFormat!=='teams')return true;
+  let a=0,b=0;
+  for(let i=0;i<n;i++){if(cfg.teams[i]===1)b++;else a++;}
+  return a>0&&b>0;
+}
+function sideLetter(s){return s===1?'B':'A';}
+function petActive(){return (G&&(G.phase==='aim'||G.phase==='roll'))?G.turn:-1;}
+function petSideName(s){
+  const P=G.pt;
+  if(P.teams)return 'Équipe '+sideLetter(s);
+  return nm(s);
+}
+function petInit(){
+  const n=G.players,teams=cfg.pFormat==='teams'&&n>1;
+  const sideOf=[],sides=[];
+  for(let p=0;p<n;p++){
+    const sd=teams?(cfg.teams[p]===1?1:0):p;
+    sideOf.push(sd);
+    if(sides.indexOf(sd)<0)sides.push(sd);
+  }
+  const pts={};
+  sides.forEach(function(sd){pts[sd]=0;});
+  G.pt={teams:teams,sideOf:sideOf,sides:sides,pts:pts,round:0,lastSide:-1,lastP:-1,lastT:new Array(n).fill(0),seq:0,coch:null,cochT:0,res:null,banner:null,bannerT:0,starter:Math.floor(Math.random()*n),win:13};
+  G.quota=new Array(n).fill(3);G.N=3;G.power=false;
+  petNewRound(false);
+}
+// Nouvelle manche (ou même manche rejouée) : le cochonet est posé au hasard vers le fond de la piste.
+function petNewRound(again){
+  const P=G.pt;
+  if(!again)P.round++;
+  G.marbles=[];
+  for(let p=0;p<G.players;p++)G.thrown[p]=0;
+  P.lastSide=-1;P.lastP=-1;
+  const c=makeMarble(-1,(Math.random()*2-1)*PW*0.5,-PL*(0.42+Math.random()*0.36),0,0);
+  c.r=COCH_R;c.mass=0.3;c.coch=true;c.entered=true;c.counted=true;
+  P.coch=c;G.marbles.push(c);P.cochT=0;P.res=null;
+  G.turn=P.starter;G.phase='aim';G.enter=calm?ENTER_T:0;G.settleT=0;G.aiThink=null;G.aiShot=null;
+  P.banner={t1:'Manche '+P.round,t2:again?'Cochonet sorti : on rejoue':nm(P.starter)+' commence'};P.bannerT=0;
+  for(let p=0;p<G.players;p++)G.scores[p]=P.pts[P.sideOf[p]];
+  say('Manche '+P.round+'. '+(again?'Le cochonet est sorti, on rejoue. ':'')+turnText());
+}
+// Meilleure distance au cochonet de chaque camp (infinie s'il n'a aucune bille sur la piste).
+function petBest(){
+  const P=G.pt,c=P.coch,best={};
+  P.sides.forEach(function(sd){best[sd]=Infinity;});
+  G.marbles.forEach(function(m){
+    if(m.coch||m.out||m.fall>=0||m.owner<0)return;
+    const d=Math.hypot(m.x-c.x,m.y-c.y),sd=P.sideOf[m.owner];
+    if(d<best[sd])best[sd]=d;
+  });
+  return best;
+}
+function petLeft(sd){
+  let n=0;
+  for(let p=0;p<G.players;p++){if(G.pt.sideOf[p]===sd)n+=3-G.thrown[p];}
+  return n;
+}
+// Règle classique : le camp le plus loin du cochonet rejoue (égalité : celui qui a lancé en dernier).
+function petNext(){
+  const P=G.pt,best=petBest(),cand=P.sides.filter(function(sd){return petLeft(sd)>0;});
+  let side=cand[0];
+  if(cand.length>1){
+    let far=-1;
+    cand.forEach(function(sd){if(best[sd]>far)far=best[sd];});
+    const tie=cand.filter(function(sd){return far===Infinity?best[sd]===Infinity:Math.abs(best[sd]-far)<1.5;});
+    if(tie.length===1)side=tie[0];
+    else if(far===Infinity){
+      // Personne n'est encore sur la piste : on tourne autour de la table après le dernier lanceur.
+      const idx=P.sides.indexOf(P.lastSide);
+      for(let k=1;k<=P.sides.length;k++){
+        const sd=P.sides[(idx+k+P.sides.length)%P.sides.length];
+        if(tie.indexOf(sd)>=0){side=sd;break;}
+      }
+    }else side=tie.indexOf(P.lastSide)>=0?P.lastSide:tie[0];
+  }
+  // Dans un camp : le joueur qui a encore des billes et a lancé le moins récemment.
+  let who=-1;
+  for(let q=0;q<G.players;q++){
+    if(P.sideOf[q]!==side||G.thrown[q]>=3)continue;
+    if(who<0||P.lastT[q]<P.lastT[who])who=q;
+  }
+  return who;
+}
+function petThrow(p,ux,uy,v){
+  const P=G.pt,a=anchorOf(p),m=makeMarble(p,a.x,a.y,ux*v,uy*v);
+  m.entered=true;
+  G.marbles.push(m);sfx('launch',Math.min(1,v/VMAX),false);
+  G.thrown[p]++;P.seq++;P.lastT[p]=P.seq;P.lastSide=P.sideOf[p];P.lastP=p;
+  G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+}
+// Les billes sont arrêtées : cochonet sorti = manche rejouée ; sinon le suivant joue, ou la manche se termine.
+function petSettle(){
+  const P=G.pt;
+  G.settleT=0;
+  // Lancer trop court ou raté : une bille arrêtée dans la zone hachurée est perdue et disparaît.
+  let lostZone=0;
+  for(const m of G.marbles){
+    if(m.coch||m.out||m.fall>=0)continue;
+    if(m.y>CZONE){m.out=true;m.vx=0;m.vy=0;lostZone++;}
+  }
+  if(lostZone)sfx('out');
+  if(P.coch.out){petNewRound(true);return;}
+  let left=0;
+  for(let p=0;p<G.players;p++)left+=3-G.thrown[p];
+  if(left<=0){petEndRound();return;}
+  G.turn=petNext();
+  G.phase='aim';G.enter=calm?ENTER_T:0;G.aiThink=null;G.aiShot=null;
+  say((lostZone?'Bille arrêtée dans la zone : perdue. ':'')+turnText());
+}
+function petEndRound(){
+  const P=G.pt,best=petBest();
+  const order=P.sides.slice().sort(function(a,b){return best[a]===best[b]?0:(best[a]<best[b]?-1:1);});
+  let win=-1,pts=0,balls=[];
+  if(isFinite(best[order[0]])&&!(order.length>1&&Math.abs(best[order[1]]-best[order[0]])<=1.5)){
+    win=order[0];
+    const other=order.length>1?best[order[1]]:Infinity;
+    G.marbles.forEach(function(m){
+      if(m.coch||m.out||m.fall>=0||m.owner<0||P.sideOf[m.owner]!==win)return;
+      if(Math.hypot(m.x-P.coch.x,m.y-P.coch.y)<other-1.5)balls.push(m);
+    });
+    pts=balls.length;
+  }
+  P.res={win:win,pts:pts,balls:balls,t:0};
+  if(win>=0){
+    P.pts[win]+=pts;
+    let st=-1;
+    for(let q=0;q<G.players;q++){if(P.sideOf[q]===win&&(st<0||P.lastT[q]<P.lastT[st]))st=q;}
+    P.starter=st; // le camp qui a marqué commence la manche suivante
+  }
+  for(let p=0;p<G.players;p++)G.scores[p]=P.pts[P.sideOf[p]];
+  G.phase='pscore';
+  if(pts>0)sfx('award');
+  say('Manche '+P.round+' : '+(win>=0?petSideName(win)+' marque '+pts+(pts>1?' points.':' point.'):'personne ne marque.'));
+}
+function petAfterScore(){
+  const P=G.pt;
+  let champ=-1;
+  P.sides.forEach(function(sd){if(P.pts[sd]>=P.win&&(champ<0||P.pts[sd]>P.pts[champ]))champ=sd;});
+  if(champ>=0){endGame();return;}
+  petNewRound(false);
+}
+function petTick(dt){
+  const P=G.pt;
+  if(G.t<INTRO_T)return;
+  P.cochT+=dt;
+  if(P.banner&&P.bannerT<2.2)P.bannerT+=dt;
+  if(G.phase==='pscore'){
+    P.res.t+=dt;
+    if(P.res.t>=3.6)petAfterScore();
+    return;
+  }
+  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T){
+    if(G.aiThink==null){G.aiShot=petAiShot();G.aiThink=AI_DELAY;}
+    G.aiThink-=dt;
+    if(G.aiThink<=0){const sh=G.aiShot;petThrow(G.turn,sh.ux,sh.uy,sh.v);}
+  }
+}
+// IA : elle simule plusieurs tirs (pointer vers le cochonet, ou tirer sur la bille adverse la mieux placée) et garde l'un des meilleurs.
+function petSim(ux,uy,v){
+  const who=G.turn,P=G.pt,mine=P.sideOf[who];
+  const ms=G.marbles.filter(function(m){return m.fall<0&&!m.out;}).map(function(m){return Object.assign({},m);});
+  const a=anchorOf(who),nb=makeMarble(who,a.x,a.y,ux*v,uy*v);
+  nb.entered=true;ms.push(nb);
+  for(let step=0;step<900;step++){
+    stepPhysics(ms,1/120);
+    let moving=false;
+    for(const m of ms){if(m.fall<0&&(m.vx!==0||m.vy!==0)&&!m.rides){moving=true;break;}}
+    if(!moving)break;
+  }
+  let c=null;
+  for(const m of ms){if(m.coch)c=m;}
+  if(!c||c.out)return -1e6; // le cochonet sorti ferait rejouer la manche
+  const dm=[],da=[];
+  for(const m of ms){
+    if(m.coch||m.out||m.fall>=0||m.owner<0||m.y>CZONE)continue; // une bille arrêtée dans la zone est perdue
+    (P.sideOf[m.owner]===mine?dm:da).push(Math.hypot(m.x-c.x,m.y-c.y));
+  }
+  const bm=dm.length?Math.min.apply(null,dm):3000,ba=da.length?Math.min.apply(null,da):3000;
+  if(bm<ba)return 100*dm.filter(function(d){return d<ba;}).length-0.05*bm;
+  return -100*da.filter(function(d){return d<bm;}).length-0.05*bm;
+}
+function petAiShot(){
+  const P=G.pt,who=G.turn,mine=P.sideOf[who],a=anchorOf(who),c=P.coch,best=petBest();
+  let tgt=null,td=Infinity;
+  G.marbles.forEach(function(m){
+    if(m.coch||m.out||m.fall>=0||m.owner<0||P.sideOf[m.owner]===mine)return;
+    const d=Math.hypot(m.x-c.x,m.y-c.y);
+    if(d<td){td=d;tgt=m;}
+  });
+  const tries=[];
+  for(let k=0;k<AI_TRIES;k++){
+    let tx=c.x,ty=c.y,shoot=false;
+    if(tgt&&k%3===0&&td<best[mine]){tx=tgt.x;ty=tgt.y;shoot=true;}
+    const dx=tx-a.x,dy=ty-a.y,D=Math.hypot(dx,dy);
+    const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*(shoot?0.03:0.045);
+    const vmax=VMAX*PET_BOOST;
+    const v=shoot?Math.min(vmax,speedFor(D)*(1.4+Math.random()*0.3)):Math.min(vmax,speedFor(Math.max(60,D*(1+(Math.random()*2-1)*0.08))));
+    const ux=Math.cos(ang),uy=Math.sin(ang);
+    tries.push({ux:ux,uy:uy,v:v,val:petSim(ux,uy,v)});
+  }
+  tries.sort(function(p,q){return q.val-p.val;});
+  // Niveau moyen : un des 4 meilleurs coups, exécuté avec une petite imprécision (direction et force).
+  const pick=tries[Math.floor(Math.random()*4)];
+  const an=Math.atan2(pick.uy,pick.ux)+(Math.random()*2-1)*0.045;
+  return {ux:Math.cos(an),uy:Math.sin(an),v:Math.min(VMAX*PET_BOOST,pick.v*(1+(Math.random()*2-1)*0.07)),val:pick.val};
+}
+function petEnd(){
+  const P=G.pt;
+  let champ=-1,bp=-1;
+  P.sides.forEach(function(sd){if(P.pts[sd]>bp){bp=P.pts[sd];champ=sd;}});
+  const order=[];
+  for(let p=0;p<G.players;p++)order.push(p);
+  order.sort(function(a,b){return P.pts[P.sideOf[b]]-P.pts[P.sideOf[a]]||a-b;});
+  const winners=order.filter(function(p){return P.sideOf[p]===champ;});
+  const title=P.teams?'Équipe '+sideLetter(champ)+' gagne !':nm(winners[0])+' gagne !';
+  $('resTitle').textContent=title;
+  sfx('end',1);
+  $('resHero').innerHTML=winners.map(function(p){return av(p,null,esc(nm(p))+', joueur '+(p+1));}).join('');
+  $('resList').innerHTML=order.map(function(p){
+    const win=winners.indexOf(p)>=0,bot=G.isAI[p];
+    const who=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span>':(G.seats&&G.seats[p]===UID?'Toi':'Joueur '+(p+1));
+    const sub=who+(P.teams?' · Équipe '+sideLetter(P.sideOf[p]):'')+' · '+P.round+(P.round>1?' manches':' manche');
+    return '<li class="rank__row mr-card'+(win?' mr-card--soleil':'')+'"><span class="avbg">'+av(p,null,esc(nm(p))+(bot?', IA':', joueur '+(p+1)))+(bot?botBadge():'')+'</span><span class="rank__nm"><strong>'+esc(nm(p))+'</strong><span class="rank__sub">'+sub+'</span></span><span class="rank__pt">'+P.pts[P.sideOf[p]]+'</span></li>';
+  }).join('');
+  syncOnlineUi();
+  show('result');
+  say('Partie terminée. '+title);
+}
+// ---------- Sniper ----------
+function snInit(){
+  const n=G.players,teams=cfg.pFormat==='teams'&&n>1;
+  const sideOf=[],sides=[];
+  for(let p=0;p<n;p++){
+    const sd=teams?(cfg.teams[p]===1?1:0):p;
+    sideOf.push(sd);
+    if(sides.indexOf(sd)<0)sides.push(sd);
+  }
+  const pts={};
+  sides.forEach(function(sd){pts[sd]=0;});
+  G.pt={teams:teams,sideOf:sideOf,sides:sides,pts:pts};
+  G.power=false;G.snCur=null;G.snPop=null;
+  G.turn=0;G.phase='aim';G.marbles=[];
+}
+function snThrow(p,ux,uy,v){
+  const a=anchorOf(p),m=makeMarble(p,a.x,a.y,ux*v,uy*v);
+  m.entered=true;
+  G.marbles.push(m);G.snCur=m;G.snPop=null;
+  sfx('launch',Math.min(1,v/VMAX),false);
+  G.thrown[p]++;
+  G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+}
+// Les billes sont arrêtées : la bille lancée marque tout de suite les points de sa zone (0 si elle est tombée dans le vide). Ils restent acquis.
+function snSettle(){
+  G.settleT=0;
+  const P=G.pt,m=G.snCur;
+  G.snCur=null;
+  let msg='';
+  if(m){
+    const fell=m.fall>=0;
+    const pts=fell?0:snScore(m.y);
+    P.pts[P.sideOf[m.owner]]+=pts;
+    G.snPop={x:m.x,y:fell?Math.max(m.y,SN_VOID):m.y,pts:pts,fell:fell,owner:m.owner,t:0};
+    sfx(fell?'out':(pts>=50?'award':'tick'),pts>=50?1:0);
+    msg=nm(m.owner)+(fell?' est tombé dans le vide : 0 point. ':' marque '+pts+(pts>1?' points. ':' point. '));
+  }
+  for(let p=0;p<G.players;p++)G.scores[p]=P.pts[P.sideOf[p]];
+  let done=true;
+  for(let p=0;p<G.players;p++){if(G.thrown[p]<quotaOf(p))done=false;}
+  if(done){endGame();return;}
+  G.turn=nextTurn();
+  G.phase='aim';G.enter=calm?ENTER_T:0;G.aiThink=null;G.aiShot=null;
+  say(msg+turnText());
+}
+function snTick(dt){
+  if(G.t<INTRO_T)return;
+  if(G.snPop){G.snPop.t+=dt;if(G.snPop.t>1.6)G.snPop=null;}
+  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T&&!ON){
+    if(G.aiThink==null){G.aiShot=snAiShot();G.aiThink=AI_DELAY;}
+    G.aiThink-=dt;
+    if(G.aiThink<=0){const sh=G.aiShot;snThrow(G.turn,sh.ux,sh.uy,sh.v);}
+  }
+}
+// IA (niveau moyen) : elle choisit un couloir et une distance, en comptant avec ~6 % d'imprécision sur la force, et évite de viser trop près du vide.
+function snAiShot(){
+  const who=G.turn,a=anchorOf(who),vmax=VMAX; // Sniper : force de tir à 1
+  const rest=G.marbles.filter(function(m){return m.fall<0&&!m.out;});
+  const lanes=[-0.55,-0.27,0,0.27,0.55];
+  const cands=[];
+  lanes.forEach(function(ln){
+    const tx=ln*PW+(Math.random()*2-1)*20;
+    for(let ty=60;ty>=-820;ty-=40){
+      const dx=tx-a.x,dy=ty-a.y,D=Math.hypot(dx,dy),ux=dx/D,uy=dy/D;
+      const v0=Math.min(vmax,speedFor(D));
+      let ev=0;const K=7;
+      for(let k=0;k<K;k++){
+        const f=1+(k/(K-1)*2-1)*0.07,d=travelOf(v0*f);
+        const ex=a.x+ux*d,ey=a.y+uy*d;
+        let val=ey<=SN_VOID?0:snScore(ey);
+        // Une bille déjà posée sur la trajectoire risque de dévier le tir.
+        for(const m of rest){
+          const t=Math.max(0,Math.min(d,(m.x-a.x)*ux+(m.y-a.y)*uy));
+          if(Math.hypot(a.x+ux*t-m.x,a.y+uy*t-m.y)<2*MR*0.95){val*=0.55;break;}
+        }
+        ev+=val;
+      }
+      cands.push({ux:ux,uy:uy,v:v0,val:ev/K+Math.random()*3});
+    }
+  });
+  cands.sort(function(p,q){return q.val-p.val;});
+  const pick=cands[Math.floor(Math.random()*2)];
+  const an=Math.atan2(pick.uy,pick.ux)+(Math.random()*2-1)*0.02;
+  return {ux:Math.cos(an),uy:Math.sin(an),v:Math.min(vmax,pick.v*(1+(Math.random()*2-1)*0.06))};
+}
+function snEnd(){
+  const P=G.pt;
+  let bp=-1;
+  P.sides.forEach(function(sd){if(P.pts[sd]>bp)bp=P.pts[sd];});
+  const champs=P.sides.filter(function(sd){return P.pts[sd]===bp;});
+  const order=[];
+  for(let p=0;p<G.players;p++)order.push(p);
+  order.sort(function(a,b){return P.pts[P.sideOf[b]]-P.pts[P.sideOf[a]]||a-b;});
+  const winners=order.filter(function(p){return champs.indexOf(P.sideOf[p])>=0;});
+  const tie=champs.length>1;
+  const title=tie?'Égalité !':(P.teams?'Équipe '+sideLetter(champs[0])+' gagne !':nm(winners[0])+' gagne !');
+  $('resTitle').textContent=title;
+  sfx('end',tie?0:1);
+  $('resHero').innerHTML=winners.map(function(p){return av(p,null,esc(nm(p))+', joueur '+(p+1));}).join('');
+  $('resList').innerHTML=order.map(function(p){
+    const win=winners.indexOf(p)>=0,bot=G.isAI[p];
+    const who=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span>':(G.seats&&G.seats[p]===UID?'Toi':'Joueur '+(p+1));
+    const sub=who+(P.teams?' · Équipe '+sideLetter(P.sideOf[p]):'')+' · '+G.thrown[p]+(G.thrown[p]>1?' billes':' bille');
+    return '<li class="rank__row mr-card'+(win?' mr-card--soleil':'')+'"><span class="avbg">'+av(p,null,esc(nm(p))+(bot?', IA':', joueur '+(p+1)))+(bot?botBadge():'')+'</span><span class="rank__nm"><strong>'+esc(nm(p))+'</strong><span class="rank__sub">'+sub+'</span></span><span class="rank__pt">'+P.pts[P.sideOf[p]]+'</span></li>';
+  }).join('');
+  syncOnlineUi();
+  show('result');
+  say('Partie terminée. '+title);
 }
 function recompute(){
   for(let p=0;p<G.players;p++)G.scores[p]=0;
@@ -1376,6 +1898,9 @@ function explodeBomb(){
 }
 function endGame(){
   G.phase='end';
+  if(!PREM)trialKeys().forEach(markTrial);
+  if(G.mode==='petanque'){petEnd();return;}
+  if(G.mode==='sniper'){snEnd();return;}
   const order=[];
   for(let p=0;p<G.players;p++)order.push(p);
   order.sort(function(a,b){return G.scores[b]-G.scores[a];});
@@ -1416,12 +1941,18 @@ function launch(p,ux,uy,v){
 function local(e){const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
 window.addEventListener('pointerdown',function(e){
   if(G&&G.mode==='rush'){rushDown(e);return;}
+  if(G&&G.mode==='petanque'&&view==='game'&&!paused&&G.phase==='pscore'){
+    if(G.pt.res&&G.pt.res.t>0.8&&!(e.target.closest&&e.target.closest('.screen,button')))petAfterScore();
+    return;
+  }
   if(!G||view!=='game'||G.phase!=='aim'||paused||aim||G.enter<ENTER_T||G.award||G.qp!=null)return;
   if(e.target.closest&&e.target.closest('.screen,button'))return;
   const q=local(e);
   if(G.seats){
     // En ligne, tout l'écran est à toi quand c'est ton tour.
     if(!isMine(G.turn)){flash[G.turn]=0.5;return;}
+  }else if(railMode()){
+    if(G.isAI[G.turn])return; // le tour d'une IA ne se joue pas
   }else{
     const s=slotAt(q.x,q.y);
     if(s!==G.turn){flash[G.turn]=0.5;return;}
@@ -1457,7 +1988,7 @@ function endAim(e,fire){
   aim=null;
   if(fire&&G&&G.phase==='aim'&&frac>=L_MIN){
     const u=vWorld(dx/len,dy/len),v=VMAX*powerOf(frac);
-    if(ON)olThrow(G.turn,u.x,u.y,v);else launch(G.turn,u.x,u.y,v);
+    if(ON)olThrow(G.turn,u.x,u.y,v);else if(G.mode==='petanque')petThrow(G.turn,u.x,u.y,v*PET_BOOST);else if(G.mode==='sniper')snThrow(G.turn,u.x,u.y,v);else launch(G.turn,u.x,u.y,v);
   }
 }
 window.addEventListener('pointerup',function(e){endAim(e,true);});
@@ -1578,6 +2109,8 @@ function drawMorpion(){
 function drawBoard(){
   ctx.fillStyle=T.board;ctx.fillRect(0,0,W,H);
   if(!W)return;
+  if(BOARD==='petanque'){drawPetTrack();return;}
+  if(BOARD==='sniper'){drawSniperTrack();return;}
   const spin=BOARD==='tournante';
   if(spin){ctx.save();ctx.translate(cx,cy);ctx.rotate(SPIN);ctx.translate(-cx,-cy);}
   if(BOARD==='morpion'){drawMorpion();return;}
@@ -1625,6 +2158,7 @@ function drawMarbles(){
   const rot=VROT*Math.PI/180,many=G.marbles.length>70;
   for(const m of G.marbles){
     const q=toScr(m.x,m.y),x=q.x,y=q.y;
+    if(m.coch){drawCoch(x,y,m);continue;}
     if(m.out){
       ctx.save();ctx.globalAlpha=Math.max(0,1-(m.fade||0)/0.4);
       drawMarble(x,y,(m.r||MR)*S,m.owner,m.roll*S,m.dir+rot);
@@ -1648,6 +2182,7 @@ function drawMarbles(){
 }
 function drawAim(){
   if(G.mode==='rush'){drawRushAim();return;}
+  if(railMode()){drawPetAim();return;}
   if(G.phase!=='aim')return;
   const p=G.turn,col=pcol(p),a=anchorOf(p),aq=toScr(a.x,a.y),ax=aq.x,ay=aq.y,r=powerRadius(p)*S;
   // La bille glisse depuis le bord de l'écran jusqu'à son point de départ.
@@ -1793,13 +2328,219 @@ function drawAward(){
   ctx.restore();
 }
 // Cadre d'un joueur : visage, numéro, nom, score, billes restantes. « À toi ! » pour le tour actif.
+// ---------- Pétanque : dessin ----------
+function drawPetTrack(){
+  const x0=cx-PW*S,y0=cy-PL*S,w=2*PW*S,h=2*PL*S;
+  ctx.save();
+  rr(x0,y0,w,h,Math.max(8,22*S));
+  ctx.fillStyle=T.plate;ctx.fill();
+  ctx.clip();
+  // Bandes tous les 400 : elles aident à juger les distances.
+  ctx.fillStyle=T.lilas;ctx.globalAlpha=LIGHT?0.28:0.22;
+  for(let k=0;k<5;k+=2)ctx.fillRect(x0,y0+k*h/5,w,h/5);
+  ctx.restore();
+  // Zone interdite au cochonet : hachures et ligne en pointillés.
+  const zy=cy+CZONE*S,bh=y0+h-zy;
+  ctx.save();
+  rr(x0,y0,w,h,Math.max(8,22*S));ctx.clip();
+  ctx.beginPath();ctx.rect(x0,zy,w,bh);ctx.clip();
+  ctx.globalAlpha=0.16;ctx.lineWidth=2;ctx.strokeStyle=T['on-board'];
+  ctx.beginPath();
+  for(let i=-bh;i<w;i+=14){ctx.moveTo(x0+i,zy+bh);ctx.lineTo(x0+i+bh,zy);}
+  ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.setLineDash([10,8]);ctx.lineWidth=3;ctx.strokeStyle=T.tomate;
+  ctx.beginPath();ctx.moveTo(x0+2,zy);ctx.lineTo(x0+w-2,zy);ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  rr(x0,y0,w,h,Math.max(8,22*S));
+  ctx.lineWidth=3;ctx.strokeStyle=T['on-board'];ctx.stroke();
+  // Cercle de lancer au bas de la piste.
+  ctx.setLineDash([8,8]);ctx.lineWidth=3;ctx.strokeStyle=T['on-board'];ctx.globalAlpha=0.7;
+  ctx.beginPath();ctx.arc(cx,cy+PANCH*S,MR*S*2.4,0,TAU);ctx.stroke();
+  ctx.restore();
+}
+// Piste du Sniper : le vide au bout, la zone 100 (fine), les zones de 90 à 10, puis la première moitié à 5 points.
+function drawSniperTrack(){
+  const x0=cx-PW*S,y0=cy-PL*S,w=2*PW*S,h=2*PL*S,Y=function(y){return cy+y*S;};
+  const yv=Y(SN_VOID),yh=Y(SN_HALF),y100=Y(SN_VOID+75);
+  ctx.save();
+  rr(x0,y0,w,h,Math.max(8,22*S));
+  ctx.fillStyle=T.plate;ctx.fill();
+  ctx.clip();
+  // Première moitié : 5 points.
+  ctx.fillStyle=T.lilas;ctx.globalAlpha=LIGHT?0.28:0.22;
+  ctx.fillRect(x0,yh,w,y0+h-yh);
+  ctx.globalAlpha=1;
+  // Zones de 10 à 90.
+  for(let k=1;k<=9;k++){
+    const yt=Y(SN_HALF-k*SN_ZW),yb=Y(SN_HALF-(k-1)*SN_ZW);
+    ctx.fillStyle=k%2?T.lilas:T.bonbon;
+    ctx.fillRect(x0,yt,w,yb-yt);
+  }
+  // Zone 100, plus fine.
+  ctx.fillStyle=T.soleil;ctx.fillRect(x0,yv,w,y100-yv);
+  // Le vide : comme le trou de la Cible de la mort, sombre au fond et plus clair sur le bord.
+  const vg=ctx.createLinearGradient(0,y0,0,yv);
+  vg.addColorStop(0,T.hole);vg.addColorStop(0.7,T.hole);vg.addColorStop(1,T.line);
+  ctx.fillStyle=vg;ctx.fillRect(x0,y0,w,yv-y0);
+  // Traits entre les zones.
+  ctx.strokeStyle=T['on-color'];ctx.lineWidth=2;ctx.globalAlpha=0.55;
+  ctx.beginPath();
+  [yh,y100].forEach(function(yy){ctx.moveTo(x0,yy);ctx.lineTo(x0+w,yy);});
+  for(let k=1;k<=9;k++){const yy=Y(SN_HALF-k*SN_ZW);ctx.moveTo(x0,yy);ctx.lineTo(x0+w,yy);}
+  ctx.stroke();
+  ctx.globalAlpha=1;
+  // Bord du vide : même trait que les anneaux de la cible.
+  ctx.lineWidth=3;ctx.strokeStyle=T['on-color'];
+  ctx.beginPath();ctx.moveTo(x0,yv);ctx.lineTo(x0+w,yv);ctx.stroke();
+  // Points : un chiffre par zone, grand et translucide.
+  ctx.fillStyle=T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.globalAlpha=0.6;
+  const fs=Math.max(11,Math.round(SN_ZW*0.62*S));
+  ctx.font='400 '+fs+'px '+FD;
+  for(let k=1;k<=9;k++)ctx.fillText(String(k*10),cx,Y(SN_HALF-(k-0.5)*SN_ZW)+Math.round(fs*0.06));
+  ctx.font='400 '+Math.max(10,Math.round(75*0.7*S))+'px '+FD;
+  ctx.fillText('100',cx,(yv+y100)/2+1);
+  ctx.globalAlpha=0.18;ctx.fillStyle=T['on-board'];
+  ctx.font='400 '+Math.max(24,Math.round(330*S))+'px '+FD;
+  ctx.fillText('5',cx,(yh+y0+h)/2);
+  ctx.restore();
+  ctx.save();
+  rr(x0,y0,w,h,Math.max(8,22*S));
+  ctx.lineWidth=3;ctx.strokeStyle=T['on-board'];ctx.stroke();
+  // Cercle de lancer au bas de la piste.
+  ctx.setLineDash([8,8]);ctx.lineWidth=3;ctx.strokeStyle=T['on-board'];ctx.globalAlpha=0.7;
+  ctx.beginPath();ctx.arc(cx,cy+PANCH*S,MR*S*2.4,0,TAU);ctx.stroke();
+  ctx.restore();
+}
+// Points gagnés par le dernier tir, affichés au-dessus de la bille.
+function drawSniperOverlay(){
+  const pop=G.snPop;
+  if(!pop||G.t<INTRO_T)return;
+  const k=Math.min(1,pop.t/1.6),al=k<0.08?k/0.08:(k>0.7?(1-k)/0.3:1);
+  const q=toScr(pop.x,pop.y);
+  const rise=calm?1:Math.min(1,pop.t/0.35);
+  const txt=pop.fell?'Dans le vide !':'+'+pop.pts;
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,al);
+  let fs=pop.fell?22:30;ctx.font='400 '+fs+'px '+FD;
+  const tw=ctx.measureText(txt).width+34,th=50;
+  const px=Math.max(tw/2+4,Math.min(W-PET_RIGHT-tw/2-4,q.x));
+  const py=Math.max(th/2+60,q.y-MR*S-36-rise*14);
+  ctx.translate(px,py);
+  rr(-tw/2,-th/2,tw,th,th/2);
+  ctx.fillStyle=pop.fell?T.hole:pcol(pop.owner);ctx.fill();
+  ctx.lineWidth=4;ctx.strokeStyle=T['on-color'];ctx.stroke();
+  ctx.fillStyle=pop.fell?'#FFF8EE':T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(txt,0,2);
+  ctx.restore();
+}
+function drawCoch(x,y,m){
+  const P=G.pt,k=Math.min(1,P.cochT/0.35),e=1-Math.pow(1-k,3);
+  const r=COCH_R*S*(calm?1:(0.4+0.6*e));
+  if(!(r>1))return;
+  ctx.save();
+  if(m.out)ctx.globalAlpha=Math.max(0,1-(m.fade||0)/0.4);
+  const og=ctx.createRadialGradient(x-r*.22,y+r*.26,r*.5,x-r*.22,y+r*.26,r*1.2);
+  og.addColorStop(0,'rgba(0,0,0,0.35)');og.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=og;ctx.beginPath();ctx.arc(x-r*.22,y+r*.26,r*1.2,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=T.bonbon;ctx.fill();
+  ctx.lineWidth=Math.max(2,r*.28);ctx.strokeStyle=T['on-color'];ctx.stroke();
+  ctx.beginPath();ctx.arc(x+r*.3,y-r*.3,r*.28,0,TAU);ctx.fillStyle='rgba(255,255,255,0.7)';ctx.fill();
+  ctx.restore();
+}
+// La bille du joueur actif monte du bas de l'écran jusqu'au cercle de lancer, puis il glisse le doigt pour la lancer.
+function drawPetAim(){
+  if(G.phase!=='aim')return;
+  const p=G.turn,col=pcol(p),a=anchorOf(p),aq=toScr(a.x,a.y),r=MR*S;
+  const k=Math.min(1,G.enter/ENTER_T),e=1-Math.pow(1-k,3);
+  const mx=aq.x,my=aq.y+(H-aq.y+r*2)*(1-e);
+  const pulse=calm?0:Math.sin(G.t*3);
+  ctx.save();
+  ctx.lineWidth=3;ctx.strokeStyle=col;
+  ctx.beginPath();ctx.arc(mx,my,r*(1.9+.12*pulse),0,TAU);ctx.stroke();
+  ctx.restore();
+  drawMarble(mx,my,r,p,0,0);
+  if(G.aiShot&&G.aiThink!=null&&G.aiThink<0.6&&G.mode!=='sniper'){
+    ctx.save();
+    ctx.strokeStyle=col;ctx.lineWidth=4;ctx.globalAlpha=0.7;ctx.lineCap='round';ctx.setLineDash([12,10]);
+    ctx.beginPath();ctx.moveTo(mx,my);
+    ctx.lineTo(mx+G.aiShot.ux*PL*S*0.6,my+G.aiShot.uy*PL*S*0.6);ctx.stroke();
+    ctx.restore();
+  }
+  if(!aim||G.mode==='sniper')return; // Sniper : ni trait ni cercle de visée
+  ctx.save();
+  ctx.lineCap='round';ctx.strokeStyle=col;ctx.lineWidth=4;
+  if(G.mode!=='sniper'){ctx.beginPath();ctx.moveTo(aim.sx,aim.sy);ctx.lineTo(aim.x,aim.y);ctx.stroke();} // Sniper : pas de trait de visée
+  ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(aim.x,aim.y,20,0,TAU);ctx.stroke();
+  ctx.restore();
+}
+// Bandeau de manche au début, puis résultat de la manche : les billes qui marquent sont entourées.
+function drawPetOverlay(){
+  const P=G.pt;
+  if(!P||G.t<INTRO_T)return;
+  if(P.banner&&P.bannerT<2.2&&G.phase!=='pscore'&&G.phase!=='end'){
+    const k=P.bannerT/2.2,al=k<0.1?k/0.1:(k>0.8?(1-k)/0.2:1);
+    const sc=calm?1:(0.85+0.15*Math.min(1,P.bannerT/0.25));
+    ctx.save();
+    ctx.globalAlpha=Math.max(0,al);
+    ctx.translate(cx,cy+PL*S*0.2);ctx.scale(sc,sc);
+    const w=Math.min(2*PW*S-10,230),h=P.banner.t2?96:64;
+    rr(-w/2,-h/2,w,h,28);ctx.fillStyle=T.soleil;ctx.fill();
+    ctx.lineWidth=4;ctx.strokeStyle=T['on-color'];ctx.stroke();
+    ctx.fillStyle=T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='400 28px '+FD;ctx.fillText(P.banner.t1,0,P.banner.t2?-16:0);
+    if(P.banner.t2){
+      let fs=16;ctx.font='700 '+fs+'px '+FB;
+      while(fs>11&&ctx.measureText(P.banner.t2).width>w-24){fs--;ctx.font='700 '+fs+'px '+FB;}
+      ctx.fillText(P.banner.t2,0,22);
+    }
+    ctx.restore();
+  }
+  if(G.phase!=='pscore'||!P.res)return;
+  const R=P.res,c=toScr(P.coch.x,P.coch.y);
+  const pulse=calm?0:Math.sin(R.t*7);
+  for(const m of R.balls){
+    const q=toScr(m.x,m.y),r=MR*S;
+    ctx.save();
+    ctx.globalAlpha=0.6;ctx.lineWidth=2;ctx.strokeStyle=T['on-board'];ctx.setLineDash([5,6]);
+    ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(q.x,q.y);ctx.stroke();
+    ctx.setLineDash([]);ctx.globalAlpha=1;
+    ctx.lineWidth=5;ctx.strokeStyle=T['on-board'];
+    ctx.beginPath();ctx.arc(q.x,q.y,r*(1.5+0.06*pulse),0,TAU);ctx.stroke();
+    ctx.lineWidth=3;ctx.strokeStyle=pcol(m.owner);
+    ctx.beginPath();ctx.arc(q.x,q.y,r*(1.5+0.06*pulse),0,TAU);ctx.stroke();
+    ctx.restore();
+  }
+  // Carte de résultat, à la place du cadre du joueur actif.
+  const w=Math.min(W-PET_RIGHT-12,300),h=104,x=cx,y=H-76;
+  const win=R.win>=0;
+  let fill=T.soleil;
+  if(win){for(let q=0;q<G.players;q++){if(P.sideOf[q]===R.win){fill=pcol(q);break;}}}
+  ctx.save();
+  ctx.translate(x,y);
+  rr(-w/2,-h/2,w,h,32);ctx.fillStyle=fill;ctx.fill();
+  ctx.lineWidth=4;ctx.strokeStyle=T['on-color'];ctx.stroke();
+  ctx.fillStyle=T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='700 15px '+FB;ctx.fillText('Manche '+P.round,0,-34);
+  const t=win?petSideName(R.win)+' marque '+R.pts+(R.pts>1?' points':' point'):'Manche nulle';
+  let fs=24;ctx.font='400 '+fs+'px '+FD;
+  while(fs>14&&ctx.measureText(t).width>w-24){fs--;ctx.font='400 '+fs+'px '+FD;}
+  ctx.fillText(t,0,-6);
+  ctx.font='700 13px '+FB;
+  ctx.fillText(R.t>0.8?'Touche pour continuer':'Premier à '+P.win+' points',0,30);
+  ctx.restore();
+}
 function drawHud(p){
   const sp=hudSpec(p),col=pcol(p);
   const rush=G.mode==='rush';
-  const active=rush?G.phase!=='end':(G.phase!=='end'&&p===G.turn);
+  const active=rush?G.phase!=='end':(railMode()?p===petActive():(G.phase!=='end'&&p===G.turn));
   ctx.save();
   ctx.translate(sp.x,sp.y);ctx.rotate(sp.rot);
-  const sc=hudSc();ctx.scale(sc,sc);
+  const sc=sp.sc||hudSc();ctx.scale(sc,sc);
   // Cadre : aplat de la couleur du joueur quand c'est son tour, simple liseré sinon.
   rr(-HW/2,-HH/2,HW,HH,HH/2);
   if(active){
@@ -1855,6 +2596,7 @@ function drawHud(p){
   }else{
     ctx.fillStyle=acc;ctx.font='400 26px '+FD;
     ctx.fillText(String(G.scores[p]),TX,3);
+    if(railMode()&&G.pt&&G.pt.teams){ctx.font='700 12px '+FB;ctx.fillText('Éq. '+sideLetter(G.pt.sideOf[p]),TX+44,3);}
     const n=quotaOf(p),gap=Math.min(10,TW/n),dr=Math.min(3,gap/2-.5);
     ctx.lineWidth=1.5;ctx.strokeStyle=acc;
     for(let i=0;i<n;i++){
@@ -1915,6 +2657,8 @@ function draw(){
   drawAim();
   drawQuakeCount();
   drawAward();
+  if(G.mode==='petanque')drawPetOverlay();
+  if(G.mode==='sniper')drawSniperOverlay();
   if(G.mode==='rush')drawRushTally();
   if(G.mode==='rush')drawRushCount();
   if(G.fx){
@@ -2258,6 +3002,8 @@ function frame(now){
       }
     }
     if(G.mode==='rush')rushTick(dt);
+    if(G.mode==='petanque')petTick(dt);
+    if(G.mode==='sniper')snTick(dt);
     if(G.phase==='roll'||G.phase==='rush'){
       acc+=dt;
       let n=0;
@@ -2276,6 +3022,8 @@ function frame(now){
       for(const m of G.marbles){if(m.fall>=0||((m.vx!==0||m.vy!==0)&&!m.rides)){moving=true;break;}}
       if(moving)G.settleT=0;
       else if(G.mode==='rush'){if(G.rush.st==='settle'){G.settleT+=dt;if(G.settleT>.4)rushEnd();}else G.settleT=0;}
+      else if(G.mode==='petanque'){G.settleT+=dt;if(G.settleT>.35)petSettle();}
+      else if(G.mode==='sniper'){G.settleT+=dt;if(G.settleT>.35)snSettle();}
       else if(G.bomb){G.bombT+=dt;if(G.bombT>0.5)explodeBomb();}
       else{G.settleT+=dt;if(G.settleT>.3){if(ON)olSettled();else settle();}}
     }else if(BOARD==='tournante'){spinRest(G.marbles,dt);}
@@ -2300,7 +3048,7 @@ function frame(now){
 const AI_DELAY=1.1; // secondes de réflexion avant chaque coup
 const AI_TRIES=14;  // lancers simulés à chaque coup
 // En ligne, seul le téléphone de l'hôte fait jouer les IA.
-function aiIsTurn(){return !!(G&&G.phase==='aim'&&G.isAI[G.turn]&&!G.award&&G.qp==null&&(!ON||ON.host));}
+function aiIsTurn(){return !!(G&&G.mode!=='petanque'&&G.mode!=='sniper'&&G.phase==='aim'&&G.isAI[G.turn]&&!G.award&&G.qp==null&&(!ON||ON.host));}
 // Simule le lancer sur une copie du plateau et évalue ce qu'il rapporte à l'IA.
 function simulateShot(ux,uy,v){
   const who=G.turn;
@@ -2342,7 +3090,7 @@ function aiChooseShot(){
 }
 
 /* ---------- Écrans ---------- */
-const VIEWS=['home','play','settings','physics','pause','result','online','lobby'];
+const VIEWS=['home','play','settings','premium','pause','result','online','lobby'];
 function show(v){
   VIEWS.forEach(function(n){$('scr-'+n).hidden=(n!==v);});
   root.setAttribute('data-view',v==='game'?'game':(v==='home'?'home':'menu'));
@@ -2355,6 +3103,7 @@ function show(v){
   if(sc&&!sc.hidden){sc.classList.remove('enter');void sc.offsetWidth;sc.classList.add('enter');}
   const h=document.querySelector('#scr-'+v+' [data-focus]');
   if(h){h.setAttribute('tabindex','-1');try{h.focus({preventScroll:true});}catch(e){}}
+  syncPrem();
 }
 function setDisabled(b,on){b.setAttribute('aria-disabled',String(on));}
 function isOff(b){return b.getAttribute('aria-disabled')==='true';}
@@ -2380,19 +3129,33 @@ const BOARD_HINT={
   morpion:'Un carré de 25 zones, de −20 à 100 points. Le centre rapporte gros, mais le bord fait perdre des points. Pas de trou.'
 };
 let playStep=0;
-const PLAY_STEPS=['st-mode','st-reg','st-bd','st-hum','st-ai'];
+const ALL_STEPS=['st-mode','st-reg','st-bd','st-hum','st-ai'];
+// La pétanque n'a qu'une piste : pas d'étape « Plateau ».
+function playSteps(){return (cfg.mode==='petanque'||cfg.mode==='sniper')?['st-mode','st-reg','st-hum','st-ai']:ALL_STEPS;}
+function teamChip(i){
+  if((cfg.mode!=='petanque'&&cfg.mode!=='sniper')||cfg.pFormat!=='teams'||seatCount()<2)return '';
+  const b=cfg.teams[i]===1,l=b?'B':'A';
+  return '<button type="button" class="mr-chip teamchip" data-team="'+i+'" style="background:var(--'+(b?'ciel':'tomate')+');color:var(--on-color);border-color:var(--on-color)" aria-label="Équipe '+l+' ('+(b?'bleue':'rouge')+'), toucher pour changer">Équipe '+l+' · '+(b?'bleue':'rouge')+'</button>';
+}
 function syncPlay(){
+  enforceFree();
   const bd=(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible';
   $('bdCible').setAttribute('aria-pressed',String(bd==='cible'));
   $('bdMorpion').setAttribute('aria-pressed',String(bd==='morpion'));
   $('bdSpin').setAttribute('aria-pressed',String(bd==='tournante'));
   const tp=$('tgPow');tp.setAttribute('aria-checked',String(!!cfg.power));tp.lastElementChild.textContent=cfg.power?'Oui':'Non';
-  const md=cfg.mode==='rush'?'rush':'tactics';
+  const md=(cfg.mode==='rush'||cfg.mode==='petanque'||cfg.mode==='sniper')?cfg.mode:'tactics';
   $('mdTactics').setAttribute('aria-pressed',String(md==='tactics'));
   $('mdRush').setAttribute('aria-pressed',String(md==='rush'));
+  $('mdPetanque').setAttribute('aria-pressed',String(md==='petanque'));
+  $('mdSniper').setAttribute('aria-pressed',String(md==='sniper'));
   $('rushField').hidden=md!=='rush';
-  $('fsMarbles').hidden=md==='rush';
-  $('fsPow').hidden=md==='rush';
+  $('ptField').hidden=md!=='petanque'&&md!=='sniper';
+  $('fsMarbles').hidden=md!=='tactics'&&md!=='sniper';
+  $('fsPow').hidden=md!=='tactics';
+  $('ptSolo').setAttribute('aria-pressed',String(cfg.pFormat!=='teams'));
+  $('ptTeams').setAttribute('aria-pressed',String(cfg.pFormat==='teams'));
+  $('ptHint').textContent=md==='sniper'?(cfg.pFormat==='teams'?'Deux équipes : A (rouge) et B (bleue), composées à l’étape des joueurs. Les points des joueurs d’une équipe s’additionnent, le plus gros total gagne.':'Chacun pour soi : tout le monde tire le même nombre de billes, le plus gros total gagne.'):cfg.pFormat==='teams'?'Deux équipes : A (rouge) et B (bleue), composées à l’étape des joueurs. 3 billes par joueur, le premier camp à 13 points gagne.':'Chacun pour soi : 3 billes par joueur, le premier à 13 points gagne.';
   $('rt30').setAttribute('aria-pressed',String(cfg.rushT!==60));
   $('rt60').setAttribute('aria-pressed',String(cfg.rushT===60));
   [1,2,3,4].forEach(function(n){$('nb'+n).setAttribute('aria-pressed',String(cfg.humans===n));});
@@ -2403,26 +3166,37 @@ function syncPlay(){
   $('aiHint').textContent=free===0?'Table complète : 4 joueurs, pas de place pour une IA.'
     :'Il reste '+free+(free>1?' places':' place')+' autour du plateau.';
   const h=cfg.humans,a=cfg.ai,t=h+a;
-  $('pHint').textContent=t===1?'Entraînement en solo'
-    :'Partie à '+t+' : '+h+(h>1?' joueurs':' joueur')+(a?' + '+a+' IA':'');
+  let ph=t===1?'Entraînement en solo':'Partie à '+t+' : '+h+(h>1?' joueurs':' joueur')+(a?' + '+a+' IA':'');
+  if(md==='petanque'||md==='sniper'){
+    if(t<2)ph='Entraînement en solo';
+    else if(cfg.pFormat==='teams'){
+      let ta=0,tb=0;
+      for(let k=0;k<t;k++){if(cfg.teams[k]===1)tb++;else ta++;}
+      ph=(ta&&tb)?'Équipe A (rouge) : '+ta+' · Équipe B (bleue) : '+tb:'Chaque équipe doit avoir au moins un joueur.';
+    }
+  }
+  $('pHint').textContent=ph;
+  setDisabled($('startBtn'),(md==='petanque'||md==='sniper')&&!petTeamsOk());
   $('mVal').textContent=String(cfg.marbles);
   $('diffField').hidden=a===0;
   setDisabled($('mMinus'),cfg.marbles<=3);
   setDisabled($('mPlus'),cfg.marbles>=15);
   $('roster').innerHTML=CHARS.slice(0,cfg.humans).map(function(c,i){
     const cur=cleanName(cfg.names[i]);
-    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(cur||c.name)+', joueur '+(i+1))+'</span><span class="roster__n"><span class="roster__s">Joueur '+(i+1)+'</span><input class="mr-name" data-i="'+i+'" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Nom du joueur '+(i+1)+'" placeholder="'+c.name+'" value="'+esc(cfg.names[i]||'')+'"></span></li>';
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(cur||c.name)+', joueur '+(i+1))+'</span><span class="roster__n"><span class="roster__s">Joueur '+(i+1)+'</span><input class="mr-name" data-i="'+i+'" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Nom du joueur '+(i+1)+'" placeholder="'+c.name+'" value="'+esc(cfg.names[i]||'')+'">'+teamChip(i)+'</span></li>';
   }).join('');
   $('rosterAi').hidden=a===0;
   $('rosterAi').innerHTML=CHARS.slice(cfg.humans,seatCount()).map(function(c,k){
     const i=cfg.humans+k;
-    return '<li class="roster__i"><span class="avbg">'+av(i,56,c.name+', IA')+botBadge()+'</span><span class="roster__n"><strong>'+c.name+'</strong><span class="roster__s"><span class="tag-bot">'+BOT_SVG+'IA</span></span></span></li>';
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,c.name+', IA')+botBadge()+'</span><span class="roster__n"><strong>'+c.name+'</strong><span class="roster__s"><span class="tag-bot">'+BOT_SVG+'IA</span></span>'+teamChip(i)+'</span></li>';
   }).join('');
   // Étapes : une seule est visible à la fois.
-  PLAY_STEPS.forEach(function(id,i){$(id).hidden=(i!==playStep);});
-  $('stepInfo').textContent='Étape '+(playStep+1)+' sur '+PLAY_STEPS.length;
-  $('stepDots').innerHTML=PLAY_STEPS.map(function(id,i){return '<i'+(i<=playStep?' data-on="1"':'')+'></i>';}).join('');
-  const last=playStep===PLAY_STEPS.length-1;
+  const steps=playSteps();
+  if(playStep>=steps.length)playStep=steps.length-1;
+  ALL_STEPS.forEach(function(id){$(id).hidden=(id!==steps[playStep]);});
+  $('stepInfo').textContent='Étape '+(playStep+1)+' sur '+steps.length;
+  $('stepDots').innerHTML=steps.map(function(id,i){return '<i'+(i<=playStep?' data-on="1"':'')+'></i>';}).join('');
+  const last=playStep===steps.length-1;
   $('nextBtn').hidden=last;
   $('startBtn').hidden=!last;
   $('playBack').textContent=playStep===0?'Retour':'Étape précédente';
@@ -2430,7 +3204,7 @@ function syncPlay(){
 function playGo(d){
   const n=playStep+d;
   if(n<0){show('home');return;}
-  if(n>=PLAY_STEPS.length)return;
+  if(n>=playSteps().length)return;
   playStep=n;syncPlay();
   $('scr-play').scrollTop=0;
   try{$('stepInfo').focus({preventScroll:true});}catch(e){}
@@ -2473,7 +3247,34 @@ function boardPreview(bd){
   return s+'</svg>';
 }
 function marbleDot(x,y,col){return '<circle cx="'+x+'" cy="'+y+'" r="6" style="fill:var('+col+');stroke:var(--on-color);stroke-width:2"/>';}
+function petanquePreview(){
+  const ln='stroke:var(--on-color);stroke-width:2';
+  return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" style="fill:var(--board)"/>'
+    +'<rect x="30" y="8" width="40" height="84" rx="5" style="fill:var(--plate);'+ln+'"/>'
+    +'<line x1="50" y1="74" x2="50" y2="46" style="stroke:var(--on-color);stroke-width:2.4;stroke-dasharray:2 5;stroke-linecap:round"/>'
+    +'<circle cx="52" cy="22" r="3.4" style="fill:var(--bonbon);stroke:var(--on-color);stroke-width:1.6"/>'
+    +'<circle cx="44" cy="30" r="5.5" style="fill:var(--ciel);'+ln+'"/>'
+    +'<circle cx="58" cy="36" r="5.5" style="fill:var(--tomate);'+ln+'"/>'
+    +'<circle cx="50" cy="82" r="5.5" style="fill:var(--menthe);'+ln+'"/></svg>';
+}
+function sniperPreview(){
+  const ln='stroke:var(--on-color);stroke-width:2';
+  let s='<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" style="fill:var(--board)"/>'
+    +'<defs><clipPath id="pvSn"><rect x="30" y="8" width="40" height="84" rx="5"/></clipPath></defs>'
+    +'<g clip-path="url(#pvSn)"><rect x="30" y="8" width="40" height="84" style="fill:var(--plate)"/>'
+    +'<rect x="30" y="8" width="40" height="9" style="fill:var(--hole);stroke:var(--on-color);stroke-width:1.2"/>'
+    +'<rect x="30" y="17" width="40" height="5" style="fill:var(--soleil)"/>';
+  for(let k=0;k<4;k++)s+='<rect x="30" y="'+(22+k*7)+'" width="40" height="7" style="fill:var('+(k%2?'--bonbon':'--lilas')+')"/>';
+  s+='<rect x="30" y="50" width="40" height="42" style="fill:var(--lilas);opacity:.25"/></g>'
+    +'<rect x="30" y="8" width="40" height="84" rx="5" style="fill:none;'+ln+'"/>'
+    +'<line x1="50" y1="76" x2="50" y2="30" style="stroke:var(--on-color);stroke-width:2.4;stroke-dasharray:2 5;stroke-linecap:round"/>'
+    +'<circle cx="50" cy="84" r="5.5" style="fill:var(--menthe);'+ln+'"/>'
+    +'<circle cx="42" cy="38" r="5.5" style="fill:var(--ciel);'+ln+'"/></svg>';
+  return s;
+}
 function modePreview(md){
+  if(md==='petanque')return petanquePreview();
+  if(md==='sniper')return sniperPreview();
   let s='<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" style="fill:var(--board)"/>'
     +'<circle cx="50" cy="46" r="38" style="fill:var(--plate);stroke:var(--on-color);stroke-width:2"/>'
     +'<circle cx="50" cy="46" r="28" style="fill:var(--lilas);stroke:var(--on-color);stroke-width:2"/>'
@@ -2502,6 +3303,8 @@ function buildHowTo(){
   $('howto').innerHTML=
     '<h4 class="lbl">Tactics</h4><ul class="rules hint">'+li(['Chacun son tour, avec un nombre fixe de billes.','Glisse ton doigt vers la cible : plus tu glisses, plus la bille file.','Arrêtée avant le plateau, une bille est perdue.','Power-ups (option) : toutes les 3 billes tirées, un joueur reçoit un pouvoir pour sa prochaine bille.'])+'</ul>'
     +'<h4 class="lbl">Rush</h4><ul class="rules hint">'+li(RUSH_RULES.common)+'</ul>'
+    +'<h4 class="lbl">Pétanque</h4><ul class="rules hint">'+li(['Une piste, un cochonet placé au hasard vers le fond, 3 billes par joueur.','Le joueur dont la bille est la plus loin du cochonet rejoue, jusqu’à ce que toutes les billes soient lancées.','À la fin de la manche, le camp le plus proche marque 1 point par bille plus proche que la meilleure bille adverse. Le premier à 13 points gagne.','La piste est entourée de murs : les billes et le cochonet rebondissent dessus. Le cochonet ne peut pas entrer dans la zone hachurée, près du cercle de lancer, et une bille qui s’y arrête (lancer trop court ou raté) est perdue.','Par équipes : A est rouge, B est bleue. Chaque joueur garde son symbole sur ses billes.','Seul, tu t’entraînes : tous les points sont pour toi.'])+'</ul>'
+    +'<h4 class="lbl">Sniper</h4><ul class="rules hint">'+li(['Une piste, tout le monde tire à tour de rôle avec le même nombre de billes.','La première moitié de la piste rapporte 5 points. Dans la seconde, les zones valent 10, 20… jusqu’à 90, puis 100 pour la zone la plus fine.','Tout au bout, c’est le vide : une bille qui y tombe ne rapporte rien.','Les points sont comptés dès que la bille s’arrête. Ils restent acquis, même si une autre bille la pousse ensuite.','Les billes rebondissent sur les murs et peuvent se pousser entre elles.','Individuel ou par équipes (A rouge, B bleue) : les points des joueurs d’une équipe s’additionnent. Le plus gros total gagne.','Seul, tu t’entraînes pour faire le meilleur total possible.'])+'</ul>'
     +'<h4 class="lbl">Les plateaux</h4><ul class="rules hint">'+li([
       '<strong>Cible de la mort</strong> : les anneaux valent 10, 20 et 50. Dans le trou, la bille est perdue.',
       '<strong>Morpion</strong> : le centre vaut 100, mais tout le bord est rouge : −5, −10 ou −20 points. Hors des 25 zones, la bille ne rapporte rien.',
@@ -2548,43 +3351,35 @@ const TUNE=[
   {k:'VMAX',label:'Vitesse maximale',hint:'La vitesse d’un lancer à pleine puissance.',min:900,max:3500,step:50,def:2400,dec:0,set:function(v){VMAX=v;}}
 ];
 let tune={};
-try{tune=JSON.parse(localStorage.getItem('marble-mixer-tune')||'{}')||{};}catch(e){tune={};}
+try{localStorage.removeItem('marble-mixer-tune');}catch(e){} // plus de réglages physiques : les valeurs d'origine servent partout
 function tuneVal(t){const v=Number(tune[t.k]);return isFinite(v)&&v>=t.min&&v<=t.max?v:t.def;}
 function applyTune(){TUNE.forEach(function(t){t.set(tuneVal(t));});}
 function saveTune(){try{localStorage.setItem('marble-mixer-tune',JSON.stringify(tune));}catch(e){}}
-function buildTune(){
-  const box=$('tuneRows');
-  box.textContent='';
-  TUNE.forEach(function(t){
-    const row=document.createElement('div');row.className='trow';
-    row.innerHTML='<label class="trow__n" for="tune-'+t.k+'">'+t.label+' <span class="code">'+t.k+'</span></label><output class="trow__v" for="tune-'+t.k+'"></output><input class="slider" type="range" id="tune-'+t.k+'"><p class="hint trow__h">'+t.hint+'</p>';
-    const inp=row.querySelector('input'),out=row.querySelector('output');
-    inp.min=t.min;inp.max=t.max;inp.step=t.step;inp.value=tuneVal(t);
-    const upd=function(){
-      out.textContent=Number(inp.value).toFixed(t.dec);
-      inp.style.setProperty('--pct',((inp.value-t.min)/(t.max-t.min)*100)+'%');
-    };
-    upd();
-    inp.addEventListener('input',function(){
-      const n=Number(inp.value);
-      tune[t.k]=n;t.set(n);upd();saveTune();
-    });
-    box.appendChild(row);
-  });
-}
-
 /* ---------- Boutons ---------- */
 $('goPlay').addEventListener('click',function(){playStep=0;syncPlay();show('play');});
-$('goSettings').addEventListener('click',function(){settingsFrom='home';syncPrefs();$('openPhys').hidden=false;show('settings');});
+$('goSettings').addEventListener('click',function(){settingsFrom='home';syncPrefs();show('settings');});
 $('playBack').addEventListener('click',function(){playGo(-1);});
 $('nextBtn').addEventListener('click',function(){playGo(1);});
 $('mdTactics').addEventListener('click',function(){cfg.mode='tactics';saveCfg();syncPlay();});
-$('mdRush').addEventListener('click',function(){cfg.mode='rush';saveCfg();syncPlay();});
+$('mdRush').addEventListener('click',function(){if(!premOk('rush'))return;cfg.mode='rush';saveCfg();syncPlay();});
+$('mdPetanque').addEventListener('click',function(){if(!premOk('petanque'))return;cfg.mode='petanque';saveCfg();syncPlay();});
+$('mdSniper').addEventListener('click',function(){if(!premOk('sniper'))return;cfg.mode='sniper';saveCfg();syncPlay();});
+$('ptSolo').addEventListener('click',function(){cfg.pFormat='solo';saveCfg();syncPlay();});
+$('ptTeams').addEventListener('click',function(){cfg.pFormat='teams';saveCfg();syncPlay();});
+['roster','rosterAi'].forEach(function(id){
+  $(id).addEventListener('click',function(e){
+    const b=e.target.closest&&e.target.closest('button[data-team]');
+    if(!b)return;
+    const i=Number(b.getAttribute('data-team'));
+    cfg.teams[i]=cfg.teams[i]===1?0:1;
+    saveCfg();syncPlay();
+  });
+});
 $('rt30').addEventListener('click',function(){cfg.rushT=30;saveCfg();syncPlay();});
 $('rt60').addEventListener('click',function(){cfg.rushT=60;saveCfg();syncPlay();});
 $('bdCible').addEventListener('click',function(){cfg.board='cible';saveCfg();syncPlay();});
-$('bdMorpion').addEventListener('click',function(){cfg.board='morpion';saveCfg();syncPlay();});
-$('bdSpin').addEventListener('click',function(){cfg.board='tournante';saveCfg();syncPlay();});
+$('bdMorpion').addEventListener('click',function(){if(!premOk('morpion'))return;cfg.board='morpion';saveCfg();syncPlay();});
+$('bdSpin').addEventListener('click',function(){if(!premOk('tournante'))return;cfg.board='tournante';saveCfg();syncPlay();});
 $('tgPow').addEventListener('click',function(){cfg.power=!cfg.power;saveCfg();syncPlay();});
 [1,2,3,4].forEach(function(n){
   $('nb'+n).addEventListener('click',function(){cfg.humans=n;cfg.ai=Math.min(cfg.ai,4-n);saveCfg();syncPlay();layout();});
@@ -2595,6 +3390,24 @@ $('tgPow').addEventListener('click',function(){cfg.power=!cfg.power;saveCfg();sy
 $('mMinus').addEventListener('click',function(){if(isOff(this))return;cfg.marbles=Math.max(3,cfg.marbles-1);saveCfg();syncPlay();});
 $('mPlus').addEventListener('click',function(){if(isOff(this))return;cfg.marbles=Math.min(15,cfg.marbles+1);saveCfg();syncPlay();});
 $('startBtn').addEventListener('click',startGame);
+$('premBuy').addEventListener('click',function(){BOUGHT=true;PREM=true;savePrem();sfx('award');syncPrem();});
+$('premBack').addEventListener('click',function(){
+  const f=premFrom||'home';
+  show(f);
+  if(f==='play')syncPlay();
+  if(f==='settings')syncPrefs();
+});
+$('psRestore').addEventListener('click',function(){
+  if(isOff(this))return;
+  if(BOUGHT){PREM=true;savePrem();syncPrem();$('psMsg').textContent='Achat restauré : Premium Edition est de retour.';}
+  else $('psMsg').textContent='Aucun achat à restaurer.';
+});
+$('psFree').addEventListener('click',function(){
+  if(isOff(this))return;
+  if(ON){$('psMsg').textContent='Quitte d’abord le salon en ligne.';return;}
+  PREM=false;savePrem();enforceFree();saveCfg();syncPrem();
+  $('psMsg').textContent='Version gratuite activée. Tu peux restaurer ton achat à tout moment.';
+});
 // Le nom se mémorise à chaque lettre ; la liste n'est pas redessinée pour ne pas couper la saisie.
 $('roster').addEventListener('input',function(e){
   const t=e.target;
@@ -2605,9 +3418,6 @@ $('roster').addEventListener('input',function(e){
 $('roster').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.blur)e.target.blur();});
 
 $('setBack').addEventListener('click',function(){show(settingsFrom);});
-$('setReset').addEventListener('click',function(){tune={};saveTune();applyTune();buildTune();});
-$('openPhys').addEventListener('click',function(){show('physics');});
-$('physBack').addEventListener('click',function(){show('settings');});
 
 $('themeChips').addEventListener('click',function(e){
   const b=e.target.closest&&e.target.closest('button[data-t]');
@@ -2628,7 +3438,7 @@ $('tgSound').addEventListener('click',function(){
 $('pauseBtn').addEventListener('click',function(){aim=null;raims=[];paused=true;show('pause');});
 $('resume').addEventListener('click',function(){paused=false;show('game');});
 $('restart').addEventListener('click',startGame);
-$('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();$('openPhys').hidden=!!ON;show('settings');});
+$('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();show('settings');});
 $('toHome').addEventListener('click',toHome);
 $('again').addEventListener('click',function(){if(ON){if(ON.host)hostStart();}else startGame();});
 $('toHome2').addEventListener('click',toHome);
@@ -3023,7 +3833,7 @@ function guestTick(){
   else if(view==='lobby')syncLobby();
 }
 
-$('goOnline').addEventListener('click',function(){olErr('');show('online');});
+$('goOnline').addEventListener('click',function(){if(!PREM){openPremium();return;}olErr('');show('online');});
 $('olBack').addEventListener('click',function(){show('home');});
 $('olCreate').addEventListener('click',olCreate);
 $('olJoin').addEventListener('click',olJoin);
@@ -3094,7 +3904,6 @@ document.addEventListener('animationend',function(e){
 applyPrefs();
 applyTune();
 buildHome();
-buildTune();
 buildPreviews();
 buildHowTo();
 syncPlay();
