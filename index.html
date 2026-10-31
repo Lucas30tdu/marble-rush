@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Marble Rush</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Marble Rush</title>
 <link rel="icon" type="image/png" href="favicon.png?v=2">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
@@ -209,6 +210,38 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .pb-tl{left:0}
 .pb-tc{left:calc(50% - 24px)}
 
+.mr-name{box-sizing:border-box;width:min(11rem,52vw);min-height:var(--target-min);margin-top:2px;padding:0 16px;border:3px solid var(--line);border-radius:var(--radius-pill);background:var(--card);color:var(--ink);font:700 1.0625rem/1.2 var(--font-body);-webkit-user-select:text;user-select:text;touch-action:manipulation}
+.mr-name::placeholder{color:var(--ink-soft);opacity:.7}
+.mr-name:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+/* Ta partie : étapes, cartes avec aperçu */
+.steps{display:flex;gap:var(--space-2)}
+.steps i{flex:1;height:8px;border-radius:var(--radius-pill);background:var(--bg-lilas);border:2px solid var(--line);box-sizing:border-box}
+.steps i[data-on="1"]{background:var(--ink);border-color:var(--ink)}
+.step:not([hidden]){animation:screenIn .25s cubic-bezier(.2,.8,.2,1) both}
+.step legend{padding:0;margin-bottom:var(--space-3)}
+.bdlist{display:grid;gap:var(--space-3)}
+.bdcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-4);width:100%;box-sizing:border-box;padding:var(--space-3) var(--space-4) var(--space-3) var(--space-3);border:3px solid var(--line);border-radius:var(--radius-lg);background:var(--card);color:var(--ink);text-align:left;font:inherit;min-height:var(--target-primary)}
+.bdcard:active{transform:scale(.98)}
+.bdcard:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.bdcard[aria-pressed="true"]{background:var(--soleil);color:var(--on-color);border-color:var(--on-color)}
+.bdcard[aria-pressed="true"]::after{content:"✓";font:700 1.5rem/1 var(--font-body)}
+.bdcard__pv{display:block;width:96px;height:96px;flex:none}
+.bdcard__pv svg{width:100%;height:100%;display:block}
+.bdcard__tx{display:grid;gap:var(--space-1);min-width:0}
+.bdcard__tx strong{font:400 1.375rem/1.1 var(--font-display)}
+.bdcard__d{font:400 1rem/1.35 var(--font-body);color:var(--ink-soft)}
+.bdcard[aria-pressed="true"] .bdcard__d{color:var(--on-color)}
+:root[data-mr="contraste"] .bdcard{border-color:var(--ink)}
+.pvspin{transform-origin:50px 50px;animation:pvspin 24s linear infinite}
+@keyframes pvspin{to{transform:rotate(360deg)}}
+/* Comment jouer, dans À propos */
+.howto{margin:var(--space-3) 0 var(--space-4);border:3px solid var(--line);border-radius:var(--radius-lg);padding:0 var(--space-4)}
+.howto summary{min-height:var(--target-primary);display:flex;align-items:center;font:400 1.25rem/1.2 var(--font-display);cursor:pointer}
+.howto summary:focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+.howto[open] summary{margin-bottom:var(--space-1)}
+.howto h4{margin:var(--space-3) 0 var(--space-1)}
+.howto .rules{margin-bottom:var(--space-3)}
+:root[data-mr="contraste"] .howto{border-color:var(--ink)}
 .about{margin-top:var(--space-5)}
 .about__list{display:grid;gap:var(--space-3);margin:0}
 .about__list div{display:grid;grid-template-columns:1fr auto;gap:var(--space-2);align-items:baseline}
@@ -249,77 +282,116 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 
   <section id="scr-play" class="screen" aria-label="Options de la partie" hidden>
     <div class="panel">
-      <header class="head"><h2 class="t-l" data-focus>Ta partie</h2></header>
-      <fieldset class="field">
-        <legend class="lbl">1. Plateau</legend>
-        <div class="chips" role="group" aria-label="Choix du plateau">
-          <button type="button" id="bdCible" class="mr-chip" aria-pressed="true">Cible de la mort</button>
-          <button type="button" id="bdMorpion" class="mr-chip" aria-pressed="false">Morpion</button>
-          <button type="button" id="bdSpin" class="mr-chip" aria-pressed="false">Cible tournante</button>
-        </div>
-        <p id="bdHint" class="hint"></p>
-      </fieldset>
-      <fieldset class="field">
-        <legend class="lbl">2. Joueurs autour du téléphone</legend>
-        <div class="chips" role="group" aria-label="Nombre de joueurs humains">
-          <button type="button" id="nb1" class="mr-chip" aria-pressed="false">1</button>
-          <button type="button" id="nb2" class="mr-chip" aria-pressed="false">2</button>
-          <button type="button" id="nb3" class="mr-chip" aria-pressed="false">3</button>
-          <button type="button" id="nb4" class="mr-chip" aria-pressed="false">4</button>
-        </div>
-      </fieldset>
-      <fieldset class="field">
-        <legend class="lbl">3. IA en face</legend>
-        <div class="chips" role="group" aria-label="Nombre d'IA">
-          <button type="button" id="ai0" class="mr-chip" aria-pressed="false">Aucune</button>
-          <button type="button" id="ai1" class="mr-chip" aria-pressed="false">1</button>
-          <button type="button" id="ai2" class="mr-chip" aria-pressed="false">2</button>
-          <button type="button" id="ai3" class="mr-chip" aria-pressed="false">3</button>
-        </div>
-        <p id="aiHint" class="hint"></p>
-      </fieldset>
-      <fieldset class="field">
-        <legend class="lbl">Autour de la table</legend>
-        <p id="pHint" class="t-m" aria-live="polite"></p>
-        <ul id="roster" class="roster"></ul>
-      </fieldset>
-      <fieldset class="field" id="diffField" hidden>
-        <legend class="lbl">Niveau des IA</legend>
-        <div class="chips">
-          <button type="button" id="dEasy" class="mr-chip" aria-disabled="true" aria-pressed="false">Facile</button>
-          <button type="button" id="dMid" class="mr-chip" aria-pressed="true">Moyen</button>
-          <button type="button" id="dHard" class="mr-chip" aria-disabled="true" aria-pressed="false">Difficile</button>
-        </div>
-        <p class="hint">Facile et Difficile arrivent bientôt.</p>
-      </fieldset>
-      <fieldset class="field">
-        <legend class="lbl">Billes par joueur</legend>
-        <div class="stepper">
-          <button type="button" id="mMinus" class="mr-btn mr-btn--icon" aria-label="Moins de billes">−</button>
-          <output id="mVal" class="stepper__val" aria-live="polite">10</output>
-          <button type="button" id="mPlus" class="mr-btn mr-btn--icon" aria-label="Plus de billes">+</button>
-        </div>
-        <p class="hint">Chacun les envoie à tour de rôle.</p>
-      </fieldset>
-      <fieldset class="field">
-        <legend class="lbl">Power-ups</legend>
-        <button type="button" id="tgPow" class="mr-toggle" role="switch" aria-checked="false">
-          <span>Activer les power-ups</span><span class="mr-switch" aria-hidden="true">Non</span>
-        </button>
-        <p class="hint">Toutes les 3 billes tirées, un joueur au hasard reçoit un pouvoir : Big ball, Tremblement de terre, Bille aimantée, Bombe ou Extra bille.</p>
-      </fieldset>
-      <div class="mr-card">
-        <h3 class="t-m">Comment jouer</h3>
-        <ul id="rules" class="rules hint" style="margin-top:12px">
-          <li>Glisse ton doigt vers la cible.</li>
-          <li>Plus tu glisses, plus la bille file.</li>
-          <li>Les anneaux valent 10, 20 et 50.</li>
-          <li>Dans le trou, la bille est perdue.</li>
-          <li>Arrêtée avant le plateau, elle est perdue aussi.</li>
-        </ul>
+      <header class="head">
+        <h2 class="t-l" data-focus>Ta partie</h2>
+        <div id="stepDots" class="steps" aria-hidden="true"></div>
+        <p id="stepInfo" class="lbl" tabindex="-1" aria-live="polite"></p>
+      </header>
+
+      <div id="st-mode" class="step" hidden>
+        <fieldset class="field">
+          <legend class="t-m">Mode de jeu</legend>
+          <div class="bdlist" role="group" aria-label="Choix du mode de jeu">
+            <button type="button" id="mdTactics" class="bdcard" aria-pressed="true">
+              <span class="bdcard__pv" data-md="tactics"></span>
+              <span class="bdcard__tx"><strong>Tactics</strong><span class="bdcard__d">Chacun son tour, avec un nombre fixe de billes. Les power-ups sont en option.</span></span>
+            </button>
+            <button type="button" id="mdRush" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="rush"></span>
+              <span class="bdcard__tx"><strong>Rush</strong><span class="bdcard__d">Un chrono commun, des billes à l’infini, tout le monde lance en même temps. Les points tombent à la fin.</span></span>
+            </button>
+          </div>
+        </fieldset>
       </div>
+
+      <div id="st-reg" class="step" hidden>
+        <fieldset class="field" id="rushField">
+          <legend class="t-m">Durée du chrono</legend>
+          <div class="chips" role="group" aria-label="Durée du chrono">
+            <button type="button" id="rt30" class="mr-chip" aria-pressed="true">30 secondes</button>
+            <button type="button" id="rt60" class="mr-chip" aria-pressed="false">60 secondes</button>
+          </div>
+          <p class="hint">Un compte à rebours de 3 secondes précède le départ.</p>
+        </fieldset>
+        <fieldset class="field" id="fsMarbles">
+          <legend class="t-m">Billes par joueur</legend>
+          <div class="stepper">
+            <button type="button" id="mMinus" class="mr-btn mr-btn--icon" aria-label="Moins de billes">−</button>
+            <output id="mVal" class="stepper__val" aria-live="polite">10</output>
+            <button type="button" id="mPlus" class="mr-btn mr-btn--icon" aria-label="Plus de billes">+</button>
+          </div>
+          <p class="hint">Chacun les envoie à tour de rôle.</p>
+        </fieldset>
+        <fieldset class="field" id="fsPow" style="margin-top:var(--space-5)">
+          <legend class="t-m">Power-ups</legend>
+          <button type="button" id="tgPow" class="mr-toggle" role="switch" aria-checked="false">
+            <span>Activer les power-ups</span><span class="mr-switch" aria-hidden="true">Non</span>
+          </button>
+          <p class="hint">Toutes les 3 billes tirées, un joueur au hasard reçoit un pouvoir : Big ball, Tremblement de terre, Bille aimantée, Bombe ou Extra bille.</p>
+        </fieldset>
+      </div>
+
+      <div id="st-bd" class="step" hidden>
+        <fieldset class="field">
+          <legend class="t-m">Plateau</legend>
+          <div class="bdlist" role="group" aria-label="Choix du plateau">
+            <button type="button" id="bdCible" class="bdcard" aria-pressed="true">
+              <span class="bdcard__pv" data-bd="cible"></span>
+              <span class="bdcard__tx"><strong>Cible de la mort</strong><span class="bdcard__d">Trois anneaux autour d’un trou. Une bille qui tombe dedans est perdue.</span></span>
+            </button>
+            <button type="button" id="bdMorpion" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-bd="morpion"></span>
+              <span class="bdcard__tx"><strong>Morpion</strong><span class="bdcard__d">Un carré de 25 zones, de −20 à 100 points. Le centre rapporte gros, mais le bord fait perdre des points. Pas de trou.</span></span>
+            </button>
+            <button type="button" id="bdSpin" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-bd="tournante"></span>
+              <span class="bdcard__tx"><strong>Cible tournante</strong><span class="bdcard__d">La cible de base, sur un plateau qui tourne lentement. Il entraîne les billes : les tirs dévient.</span></span>
+            </button>
+          </div>
+        </fieldset>
+      </div>
+
+      <div id="st-hum" class="step" hidden>
+        <fieldset class="field">
+          <legend class="t-m">Joueurs autour du plateau</legend>
+          <div class="chips" role="group" aria-label="Nombre de joueurs humains">
+            <button type="button" id="nb1" class="mr-chip" aria-pressed="false">1</button>
+            <button type="button" id="nb2" class="mr-chip" aria-pressed="false">2</button>
+            <button type="button" id="nb3" class="mr-chip" aria-pressed="false">3</button>
+            <button type="button" id="nb4" class="mr-chip" aria-pressed="false">4</button>
+          </div>
+          <ul id="roster" class="roster"></ul>
+          <p class="hint">Touche le nom d’un joueur pour le changer.</p>
+        </fieldset>
+      </div>
+
+      <div id="st-ai" class="step" hidden>
+        <fieldset class="field">
+          <legend class="t-m">IA en face</legend>
+          <div class="chips" role="group" aria-label="Nombre d'IA">
+            <button type="button" id="ai0" class="mr-chip" aria-pressed="false">Aucune</button>
+            <button type="button" id="ai1" class="mr-chip" aria-pressed="false">1</button>
+            <button type="button" id="ai2" class="mr-chip" aria-pressed="false">2</button>
+            <button type="button" id="ai3" class="mr-chip" aria-pressed="false">3</button>
+          </div>
+          <p id="aiHint" class="hint"></p>
+          <ul id="rosterAi" class="roster"></ul>
+        </fieldset>
+        <fieldset class="field" id="diffField" style="margin-top:var(--space-5)" hidden>
+          <legend class="t-m">Niveau des IA</legend>
+          <div class="chips">
+            <button type="button" id="dEasy" class="mr-chip" aria-disabled="true" aria-pressed="false">Facile</button>
+            <button type="button" id="dMid" class="mr-chip" aria-pressed="true">Moyen</button>
+            <button type="button" id="dHard" class="mr-chip" aria-disabled="true" aria-pressed="false">Difficile</button>
+          </div>
+          <p class="hint">Facile et Difficile arrivent bientôt.</p>
+        </fieldset>
+        <p id="pHint" class="lbl" style="margin-top:var(--space-5)" aria-live="polite"></p>
+      </div>
+
       <div class="actions">
-        <button type="button" id="startBtn" class="mr-btn">C’est parti !</button>
+        <button type="button" id="nextBtn" class="mr-btn">Suivant</button>
+        <button type="button" id="startBtn" class="mr-btn" hidden>C’est parti !</button>
         <button type="button" id="playBack" class="mr-btn mr-btn--quiet">Retour</button>
       </div>
     </div>
@@ -340,16 +412,20 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         </div>
         <p class="hint">Auto suit le réglage de ton téléphone.</p>
       </fieldset>
+      <button type="button" id="tgSound" class="mr-toggle" role="switch" aria-checked="true">
+        <span>Sons</span><span class="mr-switch" aria-hidden="true">Oui</span>
+      </button>
       <button type="button" id="tgCalm" class="mr-toggle" role="switch" aria-checked="false">
         <span>Réduire les animations</span><span class="mr-switch" aria-hidden="true">Non</span>
       </button>
       <button type="button" id="openPhys" class="mr-btn mr-btn--quiet">Réglages physiques</button>
       <section class="mr-card about" aria-labelledby="about-h">
         <h3 id="about-h" class="t-m">À propos</h3>
+        <details class="howto"><summary>Comment jouer</summary><div id="howto"></div></details>
         <dl class="about__list">
           <div><dt>Nom</dt><dd>Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.71</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793377219-6084</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.89</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793400144-5820</dd></div>
           <div><dt>Dernière modification</dt><dd>30/10/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -434,11 +510,25 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <button type="button" id="lbCopy" class="mr-btn mr-btn--quiet">Copier le code</button>
       </header>
       <fieldset class="field">
+        <legend class="lbl">Ton nom</legend>
+        <input id="lbName" class="mr-name" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Ton nom" placeholder="Ton nom">
+        <p class="hint">Les autres joueurs te verront sous ce nom.</p>
+      </fieldset>
+      <fieldset class="field">
         <legend class="lbl">Autour de la table</legend>
         <p id="lbHint" class="t-m" aria-live="polite"></p>
         <ul id="lbRoster" class="roster"></ul>
       </fieldset>
       <div id="lbHost" class="panel" style="flex:none;width:100%">
+        <fieldset class="field">
+          <legend class="lbl">Plateau</legend>
+          <div class="chips" role="group" aria-label="Choix du plateau">
+            <button type="button" id="lbBdCible" class="mr-chip" aria-pressed="true">Cible de la mort</button>
+            <button type="button" id="lbBdMorpion" class="mr-chip" aria-pressed="false">Morpion</button>
+            <button type="button" id="lbBdSpin" class="mr-chip" aria-pressed="false">Cible tournante</button>
+          </div>
+          <p id="lbBdHint" class="hint"></p>
+        </fieldset>
         <fieldset class="field">
           <legend class="lbl">IA en face</legend>
           <div class="chips" role="group" aria-label="Nombre d'IA">
@@ -516,6 +606,7 @@ const MORPION=[
 const OMEGA=0.3;        // vitesse de rotation, en radians par seconde (un tour en 21 s)
 let SPIN=0;             // angle du plateau tournant, pour le dessin
 let BOARD='cible';      // 'cible' (Cible de la mort), 'morpion' ou 'tournante'
+let REC=null;           // chocs d'un vrai pas de jeu, pour les sons (null pendant les simulations de l'IA)
 // Power-ups : bille aimantée (fin de course) et bombe.
 const MAG_V=300;        // sous cette vitesse (par rapport au sol), l'aimant prend le relais
 const MAG_S=130;        // vitesse maximale vers la zone visée
@@ -564,6 +655,22 @@ function magnetTarget(m){
 function powerOf(frac){
   return Math.pow(Math.min(1,frac/L_FULL),POWER_EXP);
 }
+// Choc entre deux billes : on les écarte selon leur masse, puis on échange leur élan.
+function pairHit(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy,sr=a.r+b.r;
+  if(d2>=sr*sr)return;
+  let d=Math.sqrt(d2),nx,ny;
+  if(d<0.001){nx=1;ny=0;d=0.001;}else{nx=dx/d;ny=dy/d;}
+  // Les masses décident qui bouge : une grosse bille repousse les petites sans presque ralentir.
+  const ia=1/a.mass,ib=1/b.mass,is=ia+ib,ov=sr-d;
+  a.x-=nx*ov*ia/is;a.y-=ny*ov*ia/is;b.x+=nx*ov*ib/is;b.y+=ny*ov*ib/is;
+  const vrel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
+  if(vrel>0){
+    if(REC&&vrel>30)REC.push(['b',vrel,Math.max(a.r,b.r)]);
+    const jm=(1+E_BALL)*vrel/is;
+    a.vx-=jm*ia*nx;a.vy-=jm*ia*ny;b.vx+=jm*ib*nx;b.vy+=jm*ib*ny;
+  }
+}
 // Un pas de simulation. Renvoie les billes qui viennent de tomber dans le trou.
 function stepPhysics(ms,dt){
   const lost=[];
@@ -600,7 +707,7 @@ function stepPhysics(ms,dt){
     }
     if(!steer&&sp>0){
       const ns=sp-(ACC+VISC*sp)*dt;
-      if(ns<=STOP){rx=0;ry=0;sp=0;if(!m.entered)m.out=true;}
+      if(ns<=STOP){rx=0;ry=0;sp=0;if(!m.entered){m.out=true;if(REC)REC.push(['o']);}}
       else{const f=ns/sp;rx*=f;ry*=f;sp=ns;}
     }
     // Immobile par rapport au sol : la bille tourne avec le plateau, sans dériver vers l'extérieur.
@@ -625,10 +732,10 @@ function stepPhysics(ms,dt){
       // Murs droits : la bille est entrée quand elle est passée à l'intérieur du carré.
       const lq=WQ-m.r;
       if(!m.entered){if(Math.abs(m.x)<lq&&Math.abs(m.y)<lq)m.entered=true;continue;}
-      if(m.x>lq){m.x=lq;if(m.vx>0)m.vx=-m.vx*E_WALL;}
-      else if(m.x<-lq){m.x=-lq;if(m.vx<0)m.vx=-m.vx*E_WALL;}
-      if(m.y>lq){m.y=lq;if(m.vy>0)m.vy=-m.vy*E_WALL;}
-      else if(m.y<-lq){m.y=-lq;if(m.vy<0)m.vy=-m.vy*E_WALL;}
+      if(m.x>lq){m.x=lq;if(m.vx>0){if(REC&&m.vx>40)REC.push(['w',m.vx]);m.vx=-m.vx*E_WALL;}}
+      else if(m.x<-lq){m.x=-lq;if(m.vx<0){if(REC&&m.vx<-40)REC.push(['w',-m.vx]);m.vx=-m.vx*E_WALL;}}
+      if(m.y>lq){m.y=lq;if(m.vy>0){if(REC&&m.vy>40)REC.push(['w',m.vy]);m.vy=-m.vy*E_WALL;}}
+      else if(m.y<-lq){m.y=-lq;if(m.vy<0){if(REC&&m.vy<-40)REC.push(['w',-m.vy]);m.vy=-m.vy*E_WALL;}}
       continue;
     }
     const d=Math.hypot(m.x,m.y);
@@ -637,27 +744,36 @@ function stepPhysics(ms,dt){
       const nx=m.x/d,ny=m.y/d;
       m.x=nx*lim;m.y=ny*lim;
       const vn=m.vx*nx+m.vy*ny;
-      if(vn>0){m.vx-=(1+E_WALL)*vn*nx;m.vy-=(1+E_WALL)*vn*ny;}
+      if(vn>0){if(REC&&vn>40)REC.push(['w',vn]);m.vx-=(1+E_WALL)*vn*nx;m.vy-=(1+E_WALL)*vn*ny;}
     }
   }
+  const nb=ms.length;
   for(let it=0;it<2;it++){
-    for(let i=0;i<ms.length;i++){
-      const a=ms[i];
-      if(a.fall>=0)continue;
-      for(let j=i+1;j<ms.length;j++){
-        const b=ms[j];
-        if(b.fall>=0)continue;
-        const dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy,sr=a.r+b.r;
-        if(d2>=sr*sr)continue;
-        let d=Math.sqrt(d2),nx,ny;
-        if(d<0.001){nx=1;ny=0;d=0.001;}else{nx=dx/d;ny=dy/d;}
-        // Les masses décident qui bouge : une grosse bille repousse les petites sans presque ralentir.
-        const ia=1/a.mass,ib=1/b.mass,is=ia+ib,ov=sr-d;
-        a.x-=nx*ov*ia/is;a.y-=ny*ov*ia/is;b.x+=nx*ov*ib/is;b.y+=ny*ov*ib/is;
-        const vrel=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;
-        if(vrel>0){
-          const jm=(1+E_BALL)*vrel/is;
-          a.vx-=jm*ia*nx;a.vy-=jm*ia*ny;b.vx+=jm*ib*nx;b.vy+=jm*ib*ny;
+    if(nb<=48){
+      for(let i=0;i<nb;i++){
+        const a=ms[i];
+        if(a.fall>=0)continue;
+        for(let j=i+1;j<nb;j++){const b=ms[j];if(b.fall>=0)continue;pairHit(a,b);}
+      }
+    }else{
+      // Beaucoup de billes (mode Rush) : une grille ne laisse tester que les voisines.
+      const CS=4*MR,cells=new Map();
+      for(let i=0;i<nb;i++){
+        const a=ms[i];
+        if(a.fall>=0)continue;
+        const k=(Math.floor(a.x/CS)+64)*256+Math.floor(a.y/CS)+64,l=cells.get(k);
+        if(l)l.push(i);else cells.set(k,[i]);
+      }
+      for(let i=0;i<nb;i++){
+        const a=ms[i];
+        if(a.fall>=0)continue;
+        const gx=Math.floor(a.x/CS)+64,gy=Math.floor(a.y/CS)+64;
+        for(let ox=-1;ox<=1;ox++){
+          for(let oy=-1;oy<=1;oy++){
+            const l=cells.get((gx+ox)*256+gy+oy);
+            if(!l)continue;
+            for(let q=0;q<l.length;q++){const j=l[q];if(j>i)pairHit(a,ms[j]);}
+          }
         }
       }
     }
@@ -668,7 +784,7 @@ function stepPhysics(ms,dt){
     if((BOARD==='cible'||BOARD==='tournante')&&Math.hypot(m.x,m.y)<HOLE_R){
       m.fall=0;m.vx=0;m.vy=0;
       m.fr=Math.hypot(m.x,m.y);m.fa=Math.atan2(m.y,m.x); // point d'entrée dans le trou, pour la spirale
-      lost.push(m);
+      lost.push(m);if(REC)REC.push(['f']);
     }
   }
   return lost;
@@ -733,12 +849,13 @@ function marbleSvg(i){
 }
 
 /* ---------- Préférences d’affichage ---------- */
-let prefs={theme:'auto',calm:null};
+let prefs={theme:'auto',calm:null,sound:true};
 try{
   const s=JSON.parse(localStorage.getItem('marble-rush-prefs')||'null');
   if(s){
     if(['auto','clair','sombre','contraste'].indexOf(s.theme)>=0)prefs.theme=s.theme;
     if(typeof s.calm==='boolean')prefs.calm=s.calm;
+    if(typeof s.sound==='boolean')prefs.sound=s.sound;
   }
 }catch(e){}
 function savePrefs(){try{localStorage.setItem('marble-rush-prefs',JSON.stringify(prefs));}catch(e){}}
@@ -757,12 +874,24 @@ function readTokens(){
   if(mc)mc.setAttribute('content',cs.getPropertyValue('--view-bg').trim()||T.board);
 }
 function applyPrefs(){
+  // Changer un réglage ne doit pas relancer les animations d'entrée déjà jouées : l'écran clignoterait et laisserait voir le plateau derrière.
+  document.querySelectorAll('.screen.enter,.tap').forEach(function(el){el.classList.remove('enter','tap');});
   const dt=root.getAttribute('data-theme');
   const dark=dt==='dark'?true:dt==='light'?false:!!(mqDark&&mqDark.matches);
   const th=prefs.theme==='auto'?(dark?'sombre':'clair'):prefs.theme;
   root.setAttribute('data-mr',th);
+  const wasCalm=calm;
   calm=prefs.calm===null?!!(mqReduce&&mqReduce.matches):prefs.calm;
   if(calm)root.setAttribute('data-calm','1');else root.removeAttribute('data-calm');
+  if(wasCalm&&!calm){
+    // Les animations coupées par « Réduire » repartent aussitôt, sans attendre le prochain affichage de l'écran.
+    const kick=document.querySelectorAll('.ch,.roller,.roller svg,.cast .av,.hero .av');
+    kick.forEach(function(el){el.style.animation='none';});
+    void root.offsetWidth;
+    kick.forEach(function(el){el.style.animation='';});
+  }
+  // En partie, le réglage joue tout de suite sur la bille qui attend son tir : elle arrive en glissant (ou se pose d'un coup).
+  if(wasCalm!==calm&&G&&G.phase==='aim'&&G.t>=INTRO_T)G.enter=calm?ENTER_T:0;
   readTokens();
 }
 function onMq(mq){
@@ -772,20 +901,229 @@ function onMq(mq){
 onMq(mqDark);onMq(mqReduce);
 if(window.MutationObserver)new MutationObserver(applyPrefs).observe(root,{attributes:true,attributeFilter:['data-theme']});
 
+/* ---------- Sons (Web Audio : tout est synthétisé, aucun fichier) ---------- */
+let AC=null,MASTER=null,NOISE=null,ROLL=null,voices=0;
+let turnKey=null,sndAward=null,qN=0;
+const gate={};
+function audioOn(){return prefs.sound!==false;}
+function sndReset(){turnKey=null;sndAward=null;qN=0;}
+// Le navigateur n'autorise le son qu'après un geste : on le crée au premier toucher.
+function ensureAudio(){
+  if(!audioOn())return false;
+  if(!AC){
+    const C=window.AudioContext||window.webkitAudioContext;
+    if(!C)return false;
+    try{
+      AC=new C();
+      MASTER=AC.createGain();MASTER.gain.value=0.8;
+      const lim=AC.createDynamicsCompressor();
+      MASTER.connect(lim);lim.connect(AC.destination);
+      const len=Math.floor(AC.sampleRate*1.5),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+      for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+      NOISE=buf;
+    }catch(e){AC=null;return false;}
+  }
+  if(AC.state!=='running'){try{AC.resume();}catch(e){}}
+  return true;
+}
+['pointerdown','touchend','click','keydown'].forEach(function(n){
+  document.addEventListener(n,function(){ensureAudio();},true);
+});
+function open(k,gap){
+  const t=AC.currentTime;
+  if(gate[k]&&t-gate[k]<gap)return false;
+  gate[k]=t;return true;
+}
+function env(g,t,a,peak,dec){
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+a+dec);
+}
+function tone(type,f0,f1,t,dur,vol,a){
+  if(voices>40)return;
+  a=a||0.003;
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.type=type;o.frequency.setValueAtTime(f0,t);
+  if(f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  env(g,t,a,vol,dur);
+  o.connect(g);g.connect(MASTER);
+  voices++;o.onended=function(){voices--;};
+  o.start(t);o.stop(t+a+dur+0.05);
+}
+function burst(t,dur,vol,ftype,f0,f1,q){
+  if(voices>40)return;
+  const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
+  s.buffer=NOISE;s.playbackRate.value=0.8+Math.random()*0.4;
+  f.type=ftype;f.Q.value=q||1;f.frequency.setValueAtTime(f0,t);
+  if(f1!==f0)f.frequency.exponentialRampToValueAtTime(Math.max(30,f1),t+dur);
+  env(g,t,0.004,vol,dur);
+  s.connect(f);f.connect(g);g.connect(MASTER);
+  voices++;s.onended=function(){voices--;};
+  s.start(t,Math.random()*0.5);s.stop(t+dur+0.05);
+}
+function sfx(kind,a,b){
+  if(!audioOn()||!ensureAudio()||!AC||!MASTER)return;
+  const t=AC.currentTime+0.005;
+  switch(kind){
+  case 'ball':{ // choc bille contre bille : petit « clic » de verre, plus grave pour une grosse bille
+    if(!open('ball',0.018))return;
+    const v=Math.min(1,a/1800),vol=0.06+0.5*Math.pow(v,0.8);
+    const base=(b>MR*1.5?1500:2300)+Math.random()*900;
+    tone('sine',base,base*0.97,t,0.16+0.1*v,vol,0.002);
+    tone('sine',base*2.41,base*2.3,t,0.07,vol*0.35,0.002);
+    burst(t,0.02,vol*0.5,'highpass',3500,3500,0.7);
+    break;}
+  case 'wall':{ // rebond sur le bord : « toc » sourd
+    if(!open('wall',0.03))return;
+    const v=Math.min(1,a/1500),vol=0.05+0.4*Math.pow(v,0.8);
+    tone('triangle',260,110,t,0.11,vol,0.002);
+    burst(t,0.05,vol*0.6,'lowpass',1800,500,0.8);
+    break;}
+  case 'launch':{ // lancer : souffle et pichenette, plus lourd pour une grosse bille
+    const v=Math.min(1,a);
+    burst(t,0.16+0.1*v,0.12+0.3*v,'bandpass',1400,300,1.2);
+    tone('sine',b?110:170,60,t,0.14,0.2+0.3*v,0.004);
+    break;}
+  case 'fall': // chute dans le trou : sifflement qui descend, puis « ploc »
+    tone('sine',720,90,t,FALL_T,0.28,0.01);
+    tone('sine',1080,135,t,FALL_T,0.1,0.01);
+    tone('sine',150,55,t+FALL_T-0.05,0.18,0.35,0.004);
+    break;
+  case 'out': // bille arrêtée avant le plateau
+    tone('triangle',340,170,t,0.16,0.14,0.004);
+    break;
+  case 'turn': // à toi de jouer
+    tone('sine',660,660,t,0.09,0.1,0.004);
+    tone('sine',990,990,t+0.07,0.12,0.1,0.004);
+    break;
+  case 'tick': // décompte du tremblement de terre
+    tone('square',a===1?1320:880,a===1?1320:880,t,0.08,0.06,0.003);
+    break;
+  case 'award': // un pouvoir est attribué
+    [523,659,784,1047].forEach(function(f,i){
+      tone('triangle',f,f,t+i*0.07,0.22,0.16,0.005);
+      tone('sine',f*2,f*2,t+i*0.07,0.15,0.05,0.005);
+    });
+    break;
+  case 'quake':{ // tremblement de terre : grondement qui gonfle et vibre, avec des billes qui s'entrechoquent
+    const D=1.6;
+    if(voices<=36){
+      const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain(),lfo=AC.createOscillator(),lg=AC.createGain();
+      s.buffer=NOISE;s.loop=true;
+      f.type='lowpass';f.Q.value=1.2;
+      f.frequency.setValueAtTime(260,t);
+      f.frequency.exponentialRampToValueAtTime(520,t+0.5);
+      f.frequency.exponentialRampToValueAtTime(180,t+D);
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.5,t+0.25);
+      g.gain.setValueAtTime(0.5,t+D*0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+D);
+      lfo.frequency.value=13;lg.gain.value=0.2; // secousses rapides
+      lfo.connect(lg);lg.connect(g.gain);
+      s.connect(f);f.connect(g);g.connect(MASTER);
+      voices++;s.onended=function(){voices--;};
+      s.start(t,Math.random()*0.5);s.stop(t+D+0.05);
+      lfo.start(t);lfo.stop(t+D+0.05);
+    }
+    // Des harmoniques audibles sur un petit haut-parleur, pas seulement du très grave.
+    tone('sawtooth',78,52,t,D,0.1,0.2);
+    tone('triangle',115,70,t,D,0.22,0.2);
+    // Billes et débris qui s'entrechoquent pendant la secousse.
+    for(let k=0;k<9;k++){
+      const at=t+0.12+Math.random()*1.3,f0=1700+Math.random()*1700,vol=0.07+Math.random()*0.12;
+      tone('sine',f0,f0*0.96,at,0.09,vol,0.002);
+    }
+    break;}
+  case 'boom': // explosion : claquement sec, souffle, coup sourd avec des harmoniques audibles sur un téléphone
+    burst(t,0.05,0.5,'highpass',2500,2500,0.7);
+    burst(t,0.75,0.6,'lowpass',1600,220,0.8);
+    tone('triangle',210,70,t,0.45,0.5,0.003);
+    tone('sawtooth',150,60,t,0.4,0.14,0.003);
+    tone('sine',120,40,t,0.5,0.4,0.004);
+    for(let k=0;k<4;k++){
+      const at=t+0.25+Math.random()*0.5,f0=1500+Math.random()*1500;
+      tone('sine',f0,f0*0.96,at,0.08,0.05+Math.random()*0.08,0.002);
+    }
+    break;
+  case 'end': // fin de partie : petite fanfare, plus courte en cas d'égalité
+    (a?[523,659,784,1047]:[523,659,523]).forEach(function(f,i,arr){
+      const last=i===arr.length-1;
+      tone('triangle',f,f,t+i*0.13,last?0.6:0.2,0.2,0.005);
+      tone('sine',f*2,f*2,t+i*0.13,last?0.4:0.12,0.06,0.005);
+    });
+    break;
+  case 'go': // départ du chrono
+    tone('triangle',660,660,t,0.1,0.18,0.004);
+    tone('triangle',990,990,t+0.09,0.22,0.2,0.004);
+    tone('sine',1320,1320,t+0.09,0.2,0.07,0.004);
+    break;
+  case 'horn': // fin du chrono
+    tone('sawtooth',220,200,t,0.5,0.14,0.01);
+    tone('square',165,150,t,0.5,0.06,0.01);
+    break;
+  case 'ui':
+    tone('triangle',720,900,t,0.07,0.08,0.003);
+    break;
+  }
+}
+// Sons des chocs d'un pas de jeu : au plus quelques-uns par image, les plus forts d'abord.
+function playEvents(ev){
+  if(!ev||!ev.length||!audioOn())return;
+  const hits=[];
+  for(const e of ev){
+    if(e[0]==='f')sfx('fall');
+    else if(e[0]==='o')sfx('out');
+    else hits.push(e);
+  }
+  hits.sort(function(x,y){return y[1]-x[1];});
+  for(let i=0;i<hits.length&&i<6;i++){
+    if(hits[i][0]==='b')sfx('ball',hits[i][1],hits[i][2]);
+    else sfx('wall',hits[i][1]);
+  }
+}
+// Roulement continu : un grondement grave qui suit la vitesse des billes.
+function rollLevel(ms){
+  let mx=0,n=0;
+  for(const m of ms){
+    if(m.fall>=0||m.rides)continue;
+    const sp=Math.hypot(m.vx,m.vy);
+    if(sp>40){n++;if(sp>mx)mx=sp;}
+  }
+  if(!n)return 0;
+  return Math.min(1,Math.pow(Math.min(1,mx/1800),0.8)*0.9+Math.min(n,4)*0.02);
+}
+function rollSound(level){
+  if(!AC||!MASTER)return;
+  if(!ROLL){
+    if(level<=0.01)return;
+    const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();
+    s.buffer=NOISE;s.loop=true;
+    f.type='bandpass';f.Q.value=0.5;f.frequency.value=220;
+    g.gain.value=0;
+    s.connect(f);f.connect(g);g.connect(MASTER);
+    s.start();
+    ROLL={f:f,g:g};
+  }
+  const t=AC.currentTime;
+  ROLL.g.gain.setTargetAtTime(audioOn()?0.075*level*level:0,t,0.12);
+  ROLL.f.frequency.setTargetAtTime(220+420*level,t,0.15);
+}
+
 /* ---------- Partie ---------- */
-let cfg={humans:2,marbles:10,ai:0,board:'cible',power:false};
+let cfg={humans:2,marbles:10,ai:0,board:'cible',power:false,names:['','','',''],me:'',mode:'tactics',rushT:30};
 try{
   const s=JSON.parse(localStorage.getItem('marble-mixer-cfg')||'null');
   if(s&&s.marbles>=3&&s.marbles<=15){
     const h=Math.max(1,Math.min(4,Number(s.humans||s.players)||2));
     // Anciennes sauvegardes : ai valait vrai/faux (vrai = table complétée à 4).
     const a=s.ai===true?4-h:Math.max(0,Math.min(4-h,Number(s.ai)||0));
-    cfg={humans:h,marbles:s.marbles,ai:a,board:(s.board==='morpion'||s.board==='tournante')?s.board:'cible',power:s.power===true};
+    cfg={humans:h,marbles:s.marbles,ai:a,board:(s.board==='morpion'||s.board==='tournante')?s.board:'cible',power:s.power===true,names:[0,1,2,3].map(function(k){return cleanName(Array.isArray(s.names)?s.names[k]:'');}),me:cleanName(s.me),mode:s.mode==='rush'?'rush':'tactics',rushT:s.rushT===60?60:30};
   }
 }catch(e){}
 function saveCfg(){try{localStorage.setItem('marble-mixer-cfg',JSON.stringify(cfg));}catch(e){}}
 
 let G=null,aim=null,paused=false,view='home',settingsFrom='home';
+let raims=[]; // Rush : un geste de visée par joueur, tous en même temps
 const flash=[0,0,0,0];
 let W=0,H=0,DPR=1,portrait=true,cx=0,cy=0,S=1;
 const HW=160,HH=80; // cadre d'un joueur sur le plateau (avant mise à l'échelle)
@@ -795,6 +1133,17 @@ function seatCount(){return cfg.humans+cfg.ai;}
 function seatAI(){const s=[];for(let p=0;p<seatCount();p++)s.push(p>=cfg.humans);return s;}
 function np(){return G?G.players:seatCount();}
 function pcol(p){return T[CHARS[p].col];}
+// Noms des joueurs : texte nettoyé, 12 caractères au plus ; vide = nom du personnage.
+function cleanName(v){
+  return Array.from(String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim()).slice(0,12).join('').trim();
+}
+function esc(v){return String(v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function nm(p){return (G&&G.names&&G.names[p])||CHARS[p].name;}
+function seatNames(){
+  const s=[];
+  for(let p=0;p<seatCount();p++)s.push(p<cfg.humans?(cleanName(cfg.names[p])||CHARS[p].name):CHARS[p].name);
+  return s;
+}
 
 function hudSc(){return np()>=3?Math.min(1,(W/2-60)/HW):1;}
 function layout(){
@@ -845,6 +1194,7 @@ function pickRot(n,me){
   const w=worldSeats(n);
   let best=0,bc=1e9;
   for(let k=0;k<4;k++){
+    if(BOARD==='morpion'&&k%2===1)continue; // Morpion : les départs sont sur les bords haut et bas, la vue ne tourne que d'un demi-tour
     let c=0;
     w.forEach(function(a0,i){
       const a=(a0+90*k)%360,r=a*Math.PI/180;
@@ -875,11 +1225,10 @@ function anchorOf(p){
   if(BOARD==='morpion'){
     // Carré : le départ est juste à l'extérieur d'un côté. Une place en diagonale se met sur le bord
     // haut ou bas de l'écran, décalée d'une zone vers son coin.
-    const sa=(deg+VROT)*Math.PI/180,c=Math.cos(sa),s=Math.sin(sa);
+    // Le point est calculé dans le repère du plateau (pas celui de l'écran) : en ligne, tous les téléphones lancent du même endroit.
+    const c=Math.cos(t),s=Math.sin(t);
     const sx=Math.abs(c)<0.01?0:(c>0?1:-1),sy=Math.abs(s)<0.01?0:(s>0?1:-1);
-    const q=sx===0?{x:0,y:sy*lim}:sy===0?{x:sx*lim,y:0}:{x:sx*520,y:sy*lim};
-    const w=vWorld(q.x,q.y);
-    return {x:w.x,y:w.y};
+    return sx===0?{x:0,y:sy*lim}:sy===0?{x:sx*lim,y:0}:{x:sx*520,y:sy*lim};
   }
   return {x:lim*Math.cos(t),y:lim*Math.sin(t)};
 }
@@ -900,16 +1249,16 @@ function hudSpec(p){
 function isMine(p){return !G.seats||(G.seats[p]===UID&&!G.isAI[p]);}
 function turnText(){
   const p=G.turn;
-  if(G.seats&&!isMine(p))return 'Au tour de '+CHARS[p].name+'.';
-  return 'À toi, '+CHARS[p].name+'.';
+  if(G.seats&&!isMine(p))return 'Au tour de '+nm(p)+'.';
+  return 'À toi, '+nm(p)+'.';
 }
 function say(t){$('live').textContent=t;}
 
 function startGame(){
   BOARD=(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible';
-  SPIN=0;
+  SPIN=0;sndReset();
   G={
-    players:seatCount(),N:cfg.marbles,marbles:[],isAI:seatAI(),
+    players:seatCount(),N:cfg.marbles,marbles:[],isAI:seatAI(),names:seatNames(),
     thrown:new Array(seatCount()).fill(0),
     scores:new Array(seatCount()).fill(0),
     lost:new Array(seatCount()).fill(0),
@@ -918,15 +1267,24 @@ function startGame(){
     quota:new Array(seatCount()).fill(cfg.marbles),power:!!cfg.power,pow:new Array(seatCount()).fill(null),
     awarded:0,bomb:null,bombT:0,fx:null,shake:0,award:null
   };
+  raims=[];
+  G.mode=cfg.mode==='rush'?'rush':'tactics';
+  if(G.mode==='rush'){
+    // Rush : compte à rebours, puis chrono commun ; pas de tour, pas de power-ups, billes illimitées.
+    G.power=false;G.phase='rush';
+    G.rush={st:'count',cd:3,left:cfg.rushT,dur:cfg.rushT,lastSec:0,lastSay:0,goT:0,endT:0};
+    G.cool=new Array(seatCount()).fill(0);
+    G.aiT=G.isAI.map(function(){return 0.4+Math.random()*0.7;});
+  }
   aim=null;paused=false;
   for(let i=0;i<4;i++)flash[i]=0;
   show('game');
   layout();
-  say(turnText());
+  say(G.mode==='rush'?'Rush : '+cfg.rushT+' secondes. Prêts ?':turnText());
 }
 function recompute(){
   for(let p=0;p<G.players;p++)G.scores[p]=0;
-  for(const m of G.marbles){if(m.fall<0)G.scores[m.owner]+=scoreOf(m.x,m.y);}
+  for(const m of G.marbles){if(m.fall<0&&!m.out)G.scores[m.owner]+=scoreOf(m.x,m.y);}
 }
 function settle(){
   recompute();
@@ -975,7 +1333,7 @@ function maybeAward(){
   else if(type==='quake')G.qp=p; // le séisme part tout de suite après la popup, quel que soit le tour
   else G.pow[p]=type;
   G.award={p:p,type:type,t:0,dur:calm?1.8:2.6};
-  return CHARS[p].name+' reçoit : '+POW_NAME[type]+'.';
+  return nm(p)+' reçoit : '+POW_NAME[type]+'.';
 }
 function powerRadius(p){return G.pow&&G.pow[p]==='big'?MR*2:MR;}
 // Tremblement de terre : toutes les billes des autres joueurs sont secouées dans une direction au hasard.
@@ -990,7 +1348,7 @@ function quake(p){
     const a=rnd()*TAU,v=600+rnd()*500; // de 350 à 800 unités de glissade
     m.vx+=Math.cos(a)*v;m.vy+=Math.sin(a)*v;m.rides=false;
   }
-  G.shake=1.4;
+  G.shake=1.4;sfx('quake');
 }
 // Le tremblement de terre a lieu au début du tour de son porteur, avant qu'il vise : les billes se calment, puis il tire.
 function startQuake(p){
@@ -1012,7 +1370,7 @@ function explodeBomb(){
     const v=BLAST_V*(1-d/BLAST_R)+200;
     m.vx=dx/d*v;m.vy=dy/d*v;m.rides=false;
   }
-  G.fx={x:b.x,y:b.y,t:0};
+  G.fx={x:b.x,y:b.y,t:0};sfx('boom');
   G.shake=0.5;
   G.settleT=0;
 }
@@ -1023,15 +1381,16 @@ function endGame(){
   order.sort(function(a,b){return G.scores[b]-G.scores[a];});
   const best=G.scores[order[0]];
   const winners=order.filter(function(p){return G.scores[p]===best;});
-  const title=winners.length>1?'Égalité !':CHARS[winners[0]].name+' gagne !';
+  const title=winners.length>1?'Égalité !':nm(winners[0])+' gagne !';
   $('resTitle').textContent=title;
-  $('resHero').innerHTML=winners.map(function(p){return av(p,null,CHARS[p].name+', joueur '+(p+1));}).join('');
+  sfx('end',winners.length>1?0:1);
+  $('resHero').innerHTML=winners.map(function(p){return av(p,null,esc(nm(p))+', joueur '+(p+1));}).join('');
   $('resList').innerHTML=order.map(function(p){
     const lost=G.lost[p];
-    const sub=lost===0?'Aucune bille perdue':lost+(lost>1?' billes perdues':' bille perdue');
+    const sub=(G.mode==='rush'?G.thrown[p]+(G.thrown[p]>1?' billes lancées · ':' bille lancée · '):'')+(lost===0?'Aucune bille perdue':lost+(lost>1?' billes perdues':' bille perdue'));
     const win=winners.indexOf(p)>=0,bot=G.isAI[p];
     const who=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span> · ':(G.seats&&G.seats[p]===UID?'Toi · ':'Joueur '+(p+1)+' · ');
-    return '<li class="rank__row mr-card'+(win?' mr-card--soleil':'')+'"><span class="avbg">'+av(p,null,CHARS[p].name+(bot?', IA':', joueur '+(p+1)))+(bot?botBadge():'')+'</span><span class="rank__nm"><strong>'+CHARS[p].name+'</strong><span class="rank__sub">'+who+sub+'</span></span><span class="rank__pt">'+G.scores[p]+'</span></li>';
+    return '<li class="rank__row mr-card'+(win?' mr-card--soleil':'')+'"><span class="avbg">'+av(p,null,esc(nm(p))+(bot?', IA':', joueur '+(p+1)))+(bot?botBadge():'')+'</span><span class="rank__nm"><strong>'+esc(nm(p))+'</strong><span class="rank__sub">'+who+sub+'</span></span><span class="rank__pt">'+G.scores[p]+'</span></li>';
   }).join('');
   syncOnlineUi();
   show('result');
@@ -1048,7 +1407,7 @@ function launch(p,ux,uy,v){
     else if(pw==='magnet')mb.magnet=true;
     else if(pw==='bomb'){mb.bomb=true;G.bomb=mb;G.bombT=0;}
   }
-  G.marbles.push(mb);
+  G.marbles.push(mb);sfx('launch',Math.min(1,v/VMAX),mb.r>MR);
   G.thrown[p]++;
   G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
 }
@@ -1056,6 +1415,7 @@ function launch(p,ux,uy,v){
 /* ---------- Saisie ---------- */
 function local(e){const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};}
 window.addEventListener('pointerdown',function(e){
+  if(G&&G.mode==='rush'){rushDown(e);return;}
   if(!G||view!=='game'||G.phase!=='aim'||paused||aim||G.enter<ENTER_T||G.award||G.qp!=null)return;
   if(e.target.closest&&e.target.closest('.screen,button'))return;
   const q=local(e);
@@ -1070,11 +1430,27 @@ window.addEventListener('pointerdown',function(e){
   e.preventDefault();
 });
 window.addEventListener('pointermove',function(e){
+  if(raims.length){
+    const ra=raims.find(function(x){return x.id===e.pointerId;});
+    if(ra){const rq=local(e);ra.x=rq.x;ra.y=rq.y;e.preventDefault();return;}
+  }
   if(!aim||e.pointerId!==aim.id)return;
   const q=local(e);aim.x=q.x;aim.y=q.y;
   e.preventDefault();
 },{passive:false});
 function endAim(e,fire){
+  if(raims.length){
+    const ri=raims.findIndex(function(x){return x.id===e.pointerId;});
+    if(ri>=0){
+      const ra=raims[ri];raims.splice(ri,1);
+      const rq=local(e),rdx=rq.x-ra.sx,rdy=rq.y-ra.sy,rlen=Math.hypot(rdx,rdy),rf=rlen/(WR*S);
+      if(fire&&G&&G.mode==='rush'&&G.phase==='rush'&&G.rush.st==='run'&&G.cool[ra.p]<=0&&rf>=L_MIN){
+        const u=vWorld(rdx/rlen,rdy/rlen);
+        rushThrow(ra.p,u.x,u.y,VMAX*powerOf(rf));
+      }
+      return;
+    }
+  }
   if(!aim||e.pointerId!==aim.id)return;
   const q=local(e);aim.x=q.x;aim.y=q.y;
   const dx=aim.x-aim.sx,dy=aim.y-aim.sy,len=Math.hypot(dx,dy),frac=len/(WR*S);
@@ -1120,9 +1496,19 @@ function marbleTex(col){
   TEX[col]=c;
   return c;
 }
-function drawMarble(x,y,r,p,roll,dir){
+function drawMarble(x,y,r,p,roll,dir,lite){
   // Une bille qui rétrécit dans le trou devient trop petite pour son contour : on ne la dessine plus.
   if(!(r>1.6))return;
+  if(lite){
+    // Beaucoup de billes à l'écran : les billes immobiles sont dessinées en aplat, sans ombre ni dégradé.
+    const lw0=Math.max(1.5,Math.min(3,r*.16));
+    ctx.beginPath();ctx.arc(x,y,Math.max(0.5,r-lw0/2),0,TAU);
+    ctx.fillStyle=pcol(p);ctx.fill();
+    ctx.lineWidth=lw0;ctx.strokeStyle=T['on-color'];ctx.stroke();
+    ctx.save();ctx.translate(x,y);ctx.scale(r/50*1.2,r/50*1.2);ctx.translate(-50,-50);
+    ctx.fillStyle=T['on-color'];ctx.fill(SYM[p]);ctx.restore();
+    return;
+  }
   // Ombre portée sur le sol, décalée vers le bas à gauche.
   ctx.save();
   const sx=x-r*.22,sy=y+r*.26;
@@ -1236,7 +1622,7 @@ function drawBoard(){
   if(spin)ctx.restore(); // le plateau tournant emporte ses chiffres avec lui
 }
 function drawMarbles(){
-  const rot=VROT*Math.PI/180;
+  const rot=VROT*Math.PI/180,many=G.marbles.length>70;
   for(const m of G.marbles){
     const q=toScr(m.x,m.y),x=q.x,y=q.y;
     if(m.out){
@@ -1250,7 +1636,7 @@ function drawMarbles(){
       drawMarble(x,y,(m.r||MR)*S*k,m.owner,m.roll*S,m.dir+rot);
     }else{
       const rr0=(m.r||MR)*S;
-      drawMarble(x,y,rr0,m.owner,m.roll*S,m.dir+rot);
+      drawMarble(x,y,rr0,m.owner,m.roll*S,m.dir+rot,many&&Math.abs(m.vx)<5&&Math.abs(m.vy)<5);
       if(m.magnet||m.bomb){
         // Halo : bleu pour la bille aimantée, rouge pour la bombe.
         ctx.save();ctx.lineWidth=3;ctx.strokeStyle=m.bomb?T.tomate:T.ciel;
@@ -1261,6 +1647,7 @@ function drawMarbles(){
   }
 }
 function drawAim(){
+  if(G.mode==='rush'){drawRushAim();return;}
   if(G.phase!=='aim')return;
   const p=G.turn,col=pcol(p),a=anchorOf(p),aq=toScr(a.x,a.y),ax=aq.x,ay=aq.y,r=powerRadius(p)*S;
   // La bille glisse depuis le bord de l'écran jusqu'à son point de départ.
@@ -1384,7 +1771,7 @@ function drawAward(){
   ctx.fillStyle=T['on-color'];
   ctx.textAlign='center';ctx.textBaseline='middle';
   // Joueur tiré au sort : son personnage puis « reçoit ».
-  const title=CHARS[p].name+' reçoit';
+  const title=nm(p)+' reçoit';
   ctx.font='700 20px '+FB;
   const tw=ctx.measureText(title).width,im=IMG[p];
   const total=tw+(im&&im.complete&&im.naturalWidth?52:0),x0=-total/2;
@@ -1408,7 +1795,8 @@ function drawAward(){
 // Cadre d'un joueur : visage, numéro, nom, score, billes restantes. « À toi ! » pour le tour actif.
 function drawHud(p){
   const sp=hudSpec(p),col=pcol(p);
-  const active=G.phase!=='end'&&p===G.turn;
+  const rush=G.mode==='rush';
+  const active=rush?G.phase!=='end':(G.phase!=='end'&&p===G.turn);
   ctx.save();
   ctx.translate(sp.x,sp.y);ctx.rotate(sp.rot);
   const sc=hudSc();ctx.scale(sc,sc);
@@ -1450,18 +1838,32 @@ function drawHud(p){
   // Colonne de droite, centrée verticalement : nom, score, billes restantes.
   const TX=-2,TW=58;
   ctx.textAlign='left';ctx.textBaseline='middle';
-  ctx.fillStyle=ink;ctx.font='700 15px '+FB;
-  ctx.fillText(CHARS[p].name,TX,-19);
-  ctx.fillStyle=acc;ctx.font='400 26px '+FD;
-  ctx.fillText(String(G.scores[p]),TX,3);
-  const n=quotaOf(p),gap=Math.min(10,TW/n),dr=Math.min(3,gap/2-.5);
-  ctx.lineWidth=1.5;ctx.strokeStyle=acc;
-  for(let i=0;i<n;i++){
-    ctx.beginPath();ctx.arc(TX+dr+i*gap,24,dr,0,TAU);
-    if(i>=G.thrown[p]){ctx.fillStyle=acc;ctx.fill();}else ctx.stroke();
+  ctx.fillStyle=ink;
+  const nmTxt=nm(p),nmW=(G.pow&&G.pow[p])?46:74;
+  let nfs=15;ctx.font='700 '+nfs+'px '+FB;
+  while(nfs>10&&ctx.measureText(nmTxt).width>nmW){nfs--;ctx.font='700 '+nfs+'px '+FB;}
+  ctx.fillText(nmTxt,TX,-19,nmW);
+  if(rush){
+    // Rush : les points sont cachés jusqu'à la fin du chrono ; on compte les billes lancées.
+    // Pendant le comptage sur le plateau, le cadre affiche le total qui monte.
+    const tl=!!(G.rush&&G.rush.st==='tally');
+    const rn=tl?G.scores[p]:G.thrown[p];
+    ctx.fillStyle=acc;ctx.font='400 26px '+FD;
+    ctx.fillText(String(rn),TX,3);
+    ctx.font='700 12px '+FB;
+    ctx.fillText(tl?(Math.abs(rn)>1?'points':'point'):(rn>1?'billes':'bille'),TX,24);
+  }else{
+    ctx.fillStyle=acc;ctx.font='400 26px '+FD;
+    ctx.fillText(String(G.scores[p]),TX,3);
+    const n=quotaOf(p),gap=Math.min(10,TW/n),dr=Math.min(3,gap/2-.5);
+    ctx.lineWidth=1.5;ctx.strokeStyle=acc;
+    for(let i=0;i<n;i++){
+      ctx.beginPath();ctx.arc(TX+dr+i*gap,24,dr,0,TAU);
+      if(i>=G.thrown[p]){ctx.fillStyle=acc;ctx.fill();}else ctx.stroke();
+    }
+    if(G.pow&&G.pow[p])drawPicto(G.pow[p],62,-16,11); // pouvoir en attente
   }
-  if(G.pow&&G.pow[p])drawPicto(G.pow[p],62,-16,11); // pouvoir en attente
-  if(active){
+  if(active&&!rush){
     // Le message est posé à l'extérieur du cadre, du côté opposé au plateau : les billes ne passent jamais dessus.
     rr(-46,HH/2+6,92,30,15);ctx.fillStyle=col;ctx.fill();
     ctx.fillStyle=T['on-color'];ctx.font='700 16px '+FB;
@@ -1506,11 +1908,15 @@ function draw(){
   // Les cadres des joueurs apparaissent en fondu juste après le plateau (immédiat si « Réduire les animations »).
   ctx.globalAlpha=calm?1:Math.max(0,Math.min(1,(G.t-INTRO_T)/0.5));
   for(let p=0;p<G.players;p++)drawHud(p);
+  // Le chrono s'affiche à côté du cadre de chaque joueur humain, quel que soit le nombre d'IA.
+  if(G.mode==='rush')drawRushTimers();
   ctx.globalAlpha=1;
   drawMarbles();
   drawAim();
   drawQuakeCount();
   drawAward();
+  if(G.mode==='rush')drawRushTally();
+  if(G.mode==='rush')drawRushCount();
   if(G.fx){
     // Onde de choc de la bombe.
     const q=toScr(G.fx.x,G.fx.y),k=G.fx.t/0.5,e=1-Math.pow(1-k,2);
@@ -1524,6 +1930,291 @@ function draw(){
   ctx.restore();
 }
 
+/* ---------- Mode Rush ---------- */
+const RUSH_CD=1;  // délai (en secondes) avant qu'une nouvelle bille réapparaisse sur le départ après un lancer
+// Distance parcourue par une bille lancée à la vitesse v0, d'après les frottements du plateau.
+function travelOf(v0){
+  if(v0<=STOP)return 0;
+  if(VISC>0.0001){const k=ACC/VISC,T0=Math.log((v0+k)/(STOP+k))/VISC;return (v0-STOP)/VISC-k*T0;}
+  return (v0*v0-STOP*STOP)/(2*ACC);
+}
+function speedFor(D){
+  let lo=STOP,hi=Math.max(VMAX,4000);
+  for(let i=0;i<30;i++){const mid=(lo+hi)/2;if(travelOf(mid)<D)lo=mid;else hi=mid;}
+  return (lo+hi)/2;
+}
+function rushThrow(p,ux,uy,v){
+  const a=anchorOf(p);
+  G.marbles.push(makeMarble(p,a.x,a.y,ux*v,uy*v));
+  G.thrown[p]++;G.cool[p]=RUSH_CD;
+  sfx('launch',Math.min(1,v/VMAX),false);
+}
+function rushDown(e){
+  if(view!=='game'||paused||G.phase!=='rush'||G.rush.st!=='run')return;
+  if(e.target&&e.target.closest&&e.target.closest('.screen,button'))return;
+  const q=local(e),s=slotAt(q.x,q.y);
+  if(G.isAI[s])return; // le côté d'une IA ne se joue pas
+  if(G.cool[s]>0){flash[s]=0.4;return;} // pas de bille prête : on attend qu'elle réapparaisse
+  for(let i=0;i<raims.length;i++){if(raims[i].p===s)return;} // un seul doigt par joueur
+  raims.push({id:e.pointerId,p:s,sx:q.x,sy:q.y,x:q.x,y:q.y});
+  e.preventDefault();
+}
+// L'IA vise un point au hasard près du centre et ajuste sa vitesse à la distance, sans simuler.
+function rushAiShot(p){
+  const a=anchorOf(p);
+  let tx,ty;
+  if(BOARD==='morpion'){tx=(Math.random()*2-1)*330;ty=(Math.random()*2-1)*330;}
+  else{const an=Math.random()*TAU,rd=270+Math.random()*250;tx=Math.cos(an)*rd;ty=Math.sin(an)*rd;}
+  const dx=tx-a.x,dy=ty-a.y,D=Math.hypot(dx,dy);
+  const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*0.1;
+  const v=Math.min(VMAX,speedFor(D*(1+(Math.random()*2-1)*0.1)));
+  rushThrow(p,Math.cos(ang),Math.sin(ang),v);
+}
+function rushTick(dt){
+  const R=G.rush;
+  if(G.t<INTRO_T)return;
+  for(let p=0;p<G.players;p++){if(G.cool[p]>0)G.cool[p]=Math.max(0,G.cool[p]-dt);}
+  // Une bille arrêtée dans la bordure à 0 point est perdue : elle s'efface comme une bille arrêtée avant le plateau.
+  for(const m of G.marbles){
+    if(m.out||m.fall>=0||!m.entered)continue;
+    if(!(m.rides||(m.vx===0&&m.vy===0)))continue;
+    if(scoreOf(m.x,m.y)===0){m.out=true;sfx('out');}
+  }
+  if(R.st==='count'){
+    const before=Math.ceil(R.cd);
+    R.cd-=dt;
+    if(R.cd<=0){R.st='run';R.left=R.dur;R.goT=0;sfx('go');say('Go !');}
+    else if(Math.ceil(R.cd)!==before)sfx('tick',0);
+    else if(R.lastSec===0&&before===3){R.lastSec=-1;sfx('tick',0);}
+  }else if(R.st==='run'){
+    R.goT+=dt;
+    R.left-=dt;
+    const sec=Math.ceil(R.left);
+    if(sec<=5&&sec>0&&sec!==R.lastSec){R.lastSec=sec;sfx('tick',sec===1?1:0);}
+    if(sec===10&&R.lastSay!==10){R.lastSay=10;say('Plus que 10 secondes.');}
+    for(let p=0;p<G.players;p++){
+      if(!G.isAI[p])continue;
+      G.aiT[p]-=dt;
+      // L'IA attend elle aussi que sa bille réapparaisse (1 s), puis tire après une courte pause.
+      if(G.aiT[p]<=0&&G.cool[p]<=0){rushAiShot(p);G.aiT[p]=Math.random()*0.4;}
+    }
+    if(R.left<=0){
+      R.left=0;R.st='settle';R.endT=0;raims.length=0;G.settleT=0;
+      sfx('horn');say('Temps écoulé.');
+    }
+  }else if(R.st==='settle'||R.st==='tally'){
+    R.endT+=dt;
+    if(R.st==='tally')tallyTick(dt);
+  }
+}
+// Le chrono est terminé et les billes se sont arrêtées : on les compte une à une sur le plateau,
+// puis seulement ensuite le tableau des scores s'affiche.
+function rushEnd(){
+  const R=G.rush;
+  R.st='tally';
+  const lists=[];
+  let mx=0;
+  for(let p=0;p<G.players;p++){lists.push([]);G.scores[p]=0;}
+  for(const m of G.marbles){
+    if(m.fall>=0||m.out)continue;
+    const pts=scoreOf(m.x,m.y);
+    if(pts!==0)lists[m.owner].push({m:m,pts:pts,t:-1});
+  }
+  // Les petites valeurs d'abord : les plus grosses arrivent en dernier.
+  for(let p=0;p<G.players;p++){
+    lists[p].sort(function(a,b){return a.pts-b.pts;});
+    mx=Math.max(mx,lists[p].length);
+  }
+  // Tous les joueurs sont comptés en même temps, au plus 4 secondes en tout.
+  R.tally={lists:lists,i:0,max:mx,step:Math.max(0.05,Math.min(0.3,4/Math.max(1,mx))),acc:0,hold:0};
+  say('Comptage des billes sur le plateau.');
+}
+function tallyReveal(){
+  const T2=G.rush.tally,i=T2.i++;
+  let big=0;
+  for(let p=0;p<G.players;p++){
+    const e=T2.lists[p][i];
+    if(!e)continue;
+    e.t=0;G.scores[p]+=e.pts;
+    if(e.pts>big)big=e.pts;
+  }
+  sfx('tick',big>=50?1:0);
+}
+function tallyTick(dt){
+  const T2=G.rush.tally;
+  for(let p=0;p<G.players;p++){
+    const L=T2.lists[p];
+    for(let k=0;k<L.length;k++){if(L[k].t>=0)L[k].t+=dt;}
+  }
+  if(T2.i<T2.max){
+    T2.acc+=dt;
+    while(T2.acc>=T2.step&&T2.i<T2.max){T2.acc-=T2.step;tallyReveal();}
+  }else{
+    // Une courte pause sur le total final, puis le classement.
+    T2.hold+=dt;
+    if(T2.hold>=0.9)endGame();
+  }
+}
+// Chrono en grand sur le plateau, translucide et sous les billes.
+function drawRushTimer(){
+  const R=G.rush;
+  if(R.st==='count')return;
+  const sec=R.st==='run'?Math.ceil(R.left):0;
+  const low=R.st==='run'&&R.left<=5;
+  ctx.save();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='400 '+Math.round(Math.min(W,H)*0.34)+'px '+FD;
+  ctx.globalAlpha=low?0.45:0.3;
+  ctx.lineWidth=Math.max(3,Math.min(W,H)*0.012);ctx.lineJoin='round';
+  ctx.strokeStyle=T['on-color'];ctx.fillStyle=low?T.tomate:T.soleil;
+  ctx.strokeText(String(sec),cx,cy);ctx.fillText(String(sec),cx,cy);
+  ctx.restore();
+}
+// Chrono à côté du cadre de chaque joueur humain (1 ou 2 joueurs) : en bas à gauche pour le joueur du bas,
+// et retourné de l'autre côté (en haut à droite, à l'envers) pour le joueur d'en face.
+function drawRushTimers(){
+  const R=G.rush;
+  const sec=R.st==='count'?R.dur:(R.st==='run'?Math.ceil(R.left):0);
+  const low=R.st==='run'&&R.left<=5;
+  const w=76,h=56,sc=hudSc(),off=HW/2+10+w/2,d=off*sc,mg=w/2*sc+4;
+  for(let p=0;p<G.players;p++){
+    if(G.isAI[p])continue; // l'IA n'a pas de chrono à lire
+    const sp=hudSpec(p);
+    // Cadre dans un coin (3 ou 4 places) : pas de place à côté, le chrono se glisse sous le cadre, un peu plus petit.
+    const corner=seatAngles(G.players)[p]%90!==0;
+    // Côté gauche du cadre (dans son propre sens de lecture) ; s'il sort de l'écran, on passe à droite.
+    const lx=sp.x-d*Math.cos(sp.rot),ly=sp.y-d*Math.sin(sp.rot);
+    const side=(lx>=mg&&lx<=W-mg&&ly>=mg&&ly<=H-mg)?-1:1;
+    ctx.save();
+    ctx.translate(sp.x,sp.y);ctx.rotate(sp.rot);ctx.scale(sc,sc);
+    if(corner){ctx.translate(0,HH/2+6+h*0.35);ctx.scale(0.7,0.7);}else ctx.translate(side*off,0);
+    if(low&&!calm){const k=1+0.06*Math.sin(G.t*9);ctx.scale(k,k);}
+    rr(-w/2,-h/2,w,h,h/2);
+    ctx.fillStyle=low?T.tomate:T.soleil;ctx.fill();
+    ctx.lineWidth=3;ctx.strokeStyle=T['on-color'];ctx.stroke();
+    ctx.fillStyle=T['on-color'];ctx.textBaseline='middle';
+    ctx.font='400 30px '+FD;
+    const nt=String(sec),nw=ctx.measureText(nt).width;
+    ctx.font='700 15px '+FB;
+    const uw=ctx.measureText(' s').width,x0=-(nw+uw)/2;
+    ctx.textAlign='left';
+    ctx.font='400 30px '+FD;ctx.fillText(nt,x0,2);
+    ctx.font='700 15px '+FB;ctx.fillText(' s',x0+nw,6);
+    ctx.restore();
+  }
+}
+// Comptage final : chaque bille qui rapporte des points est entourée, avec sa valeur qui apparaît au-dessus.
+function drawRushTally(){
+  const R=G.rush;
+  if(R.st!=='tally'||!R.tally)return;
+  const T2=R.tally;
+  for(let p=0;p<G.players;p++){
+    const L=T2.lists[p],col=pcol(p),rot=hudSpec(p).rot;
+    for(let k=0;k<L.length;k++){
+      const e=L[k];
+      if(e.t<0)continue;
+      const q=toScr(e.m.x,e.m.y),r=(e.m.r||MR)*S;
+      const pop=calm?1:Math.min(1,e.t/0.18);
+      // Anneau : il reste autour de la bille pour montrer qu'elle est comptée.
+      ctx.save();
+      ctx.lineWidth=4;ctx.strokeStyle=col;
+      ctx.beginPath();ctx.arc(q.x,q.y,r*(1.25+0.9*(1-pop)),0,TAU);ctx.stroke();
+      ctx.lineWidth=2;ctx.strokeStyle=T['on-board'];
+      ctx.beginPath();ctx.arc(q.x,q.y,r*(1.25+0.9*(1-pop))+3,0,TAU);ctx.stroke();
+      ctx.restore();
+      // Valeur : une pastille de la couleur du joueur, lisible dans tous les thèmes, qui s'efface vite.
+      const life=e.t;
+      if(life>0.85)continue;
+      const al=life<0.55?1:1-(life-0.55)/0.3;
+      const rise=calm?0:-16*(1-Math.pow(1-Math.min(1,life/0.35),2));
+      const txt=(e.pts>0?'+':'')+e.pts;
+      ctx.save();
+      ctx.translate(q.x,q.y);ctx.rotate(rot);
+      ctx.globalAlpha=al;
+      ctx.font='400 20px '+FD;
+      const tw=ctx.measureText(txt).width+18;
+      const oy=-(r*1.25+22)+rise;
+      rr(-tw/2,oy-14,tw,28,14);
+      ctx.fillStyle=col;ctx.fill();
+      ctx.lineWidth=2.5;ctx.strokeStyle=T['on-color'];ctx.stroke();
+      ctx.fillStyle=T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(txt,0,oy+1);
+      ctx.restore();
+    }
+  }
+}
+// Départs : une bille prête et son anneau pour chaque joueur, plus le geste de visée en cours.
+function drawRushAim(){
+  const R=G.rush;
+  if(R.st==='settle'||R.st==='tally')return;
+  for(let p=0;p<G.players;p++){
+    const col=pcol(p),a=anchorOf(p),q=toScr(a.x,a.y),r=MR*S;
+    ctx.save();
+    ctx.lineWidth=3;ctx.strokeStyle=col;
+    if(G.cool[p]>0){
+      // Pas de bille pour le moment : l'anneau se remplit pendant la seconde d'attente.
+      const k=1-G.cool[p]/RUSH_CD;
+      ctx.globalAlpha=0.35;
+      ctx.beginPath();ctx.arc(q.x,q.y,r*1.9,0,TAU);ctx.stroke();
+      ctx.globalAlpha=1;
+      ctx.beginPath();ctx.arc(q.x,q.y,r*1.9,-Math.PI/2,-Math.PI/2+TAU*k);ctx.stroke();
+    }else{
+      const pulse=calm?0:Math.sin(G.t*3+p);
+      ctx.beginPath();ctx.arc(q.x,q.y,r*(1.9+.12*pulse),0,TAU);ctx.stroke();
+    }
+    ctx.restore();
+    if(G.cool[p]<=0)drawMarble(q.x,q.y,r,p,0,0);
+  }
+  for(let i=0;i<raims.length;i++){
+    const a=raims[i],col=pcol(a.p);
+    ctx.save();
+    ctx.lineCap='round';ctx.strokeStyle=col;ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(a.sx,a.sy);ctx.lineTo(a.x,a.y);ctx.stroke();
+    ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(a.x,a.y,20,0,TAU);ctx.stroke();
+    ctx.restore();
+  }
+}
+// 3-2-1 avant le départ, puis « Go ! » et « Temps ! » en grand.
+function drawRushCount(){
+  const R=G.rush;
+  if(G.t<INTRO_T)return;
+  if(R.st==='count'){
+    const n=Math.max(1,Math.ceil(R.cd)),f=R.cd%1;
+    ctx.save();
+    ctx.globalAlpha=0.5;ctx.fillStyle=T.board;ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=1;
+    ctx.translate(W/2,H/2);
+    const w=Math.min(W-40,240),h=200;
+    rr(-w/2,-h/2,w,h,36);ctx.fillStyle=T.soleil;ctx.fill();
+    ctx.lineWidth=4;ctx.strokeStyle=T['on-color'];ctx.stroke();
+    ctx.fillStyle=T['on-color'];ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='700 20px '+FB;
+    ctx.fillText('Rush · '+R.dur+' secondes',0,-68);
+    const sc=calm?1:1.25-0.25*Math.min(1,f*3);
+    ctx.translate(0,24);ctx.scale(sc,sc);
+    ctx.font='400 110px '+FD;
+    ctx.fillText(String(n),0,0);
+    ctx.restore();
+    return;
+  }
+  let txt='',k=0;
+  if(R.st==='run'&&R.goT<0.7){txt='Go !';k=R.goT/0.7;}
+  else if((R.st==='settle'||R.st==='tally')&&R.endT<1.2){txt='Temps !';k=R.endT/1.2;}
+  else return;
+  ctx.save();
+  ctx.globalAlpha=Math.max(0,1-k*k);
+  ctx.translate(W/2,H/2);
+  const sc=calm?1:0.8+0.4*Math.min(1,k*3);
+  ctx.scale(sc,sc);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font='400 '+Math.round(Math.min(W,H)*0.26)+'px '+FD;
+  ctx.lineWidth=Math.max(4,Math.min(W,H)*0.016);ctx.lineJoin='round';
+  ctx.strokeStyle=T['on-color'];ctx.fillStyle=txt==='Go !'?T.menthe:T.tomate;
+  ctx.strokeText(txt,0,0);ctx.fillText(txt,0,0);
+  ctx.restore();
+}
+
 /* ---------- Boucle ---------- */
 const STEP=1/240;
 let lastT=performance.now(),acc=0;
@@ -1531,6 +2222,7 @@ function frame(now){
   const dt=Math.min(.05,(now-lastT)/1000);lastT=now;
   // En ligne, la partie continue derrière la pause : les autres joueurs n'attendent pas.
   const run=!!(G&&(ON?G.gid:(!paused&&view==='game')));
+  let lv=0;
   if(run){
     G.t+=dt;
     if(G.phase==='aim'&&G.t>=INTRO_T)G.enter+=dt;
@@ -1543,6 +2235,16 @@ function frame(now){
       G.qwait=(G.qwait||0)+dt;
       if(G.qwait>=QUAKE_CD){G.qwait=0;startQuake(G.qp);}
     }else G.qwait=0;
+    // Sons : attribution d'un pouvoir, signal de tour, décompte du tremblement de terre.
+    if(G.award){if(G.award!==sndAward){sndAward=G.award;sfx('award');}}else sndAward=null;
+    if(G.phase==='aim'&&G.t>=INTRO_T&&!G.award&&G.qp==null){
+      const key=G.turn+':'+G.thrown.join(',')+':'+(G.qk||0);
+      if(key!==turnKey){turnKey=key;if(!G.isAI[G.turn]&&isMine(G.turn))sfx('turn');}
+    }
+    if(G.phase==='aim'&&G.qp!=null&&!G.award&&G.qwait>0){
+      const qn=Math.max(1,Math.ceil(QUAKE_CD-G.qwait));
+      if(qn!==qN){qN=qn;sfx('tick',qn===1?1:0);}
+    }else qN=0;
     // IA : elle réfléchit un instant, puis lance sa bille.
     if(aiIsTurn()){
       if(G.aiThink==null){
@@ -1555,9 +2257,11 @@ function frame(now){
         if(ON)olThrow(G.turn,s.ux,s.uy,s.v);else launch(G.turn,s.ux,s.uy,s.v);
       }
     }
-    if(G.phase==='roll'){
+    if(G.mode==='rush')rushTick(dt);
+    if(G.phase==='roll'||G.phase==='rush'){
       acc+=dt;
       let n=0;
+      REC=[];
       while(acc>=STEP&&n<20){
         const lost=stepPhysics(G.marbles,STEP);
         if(BOARD==='tournante')SPIN+=OMEGA*STEP;
@@ -1565,15 +2269,19 @@ function frame(now){
         acc-=STEP;n++;
       }
       if(n>=20)acc=0;
+      playEvents(REC);REC=null;
       G.marbles=G.marbles.filter(function(m){return m.fall<FALL_T;});
+      lv=(view==='game'&&!paused)?rollLevel(G.marbles):0;
       let moving=false;
       for(const m of G.marbles){if(m.fall>=0||((m.vx!==0||m.vy!==0)&&!m.rides)){moving=true;break;}}
       if(moving)G.settleT=0;
+      else if(G.mode==='rush'){if(G.rush.st==='settle'){G.settleT+=dt;if(G.settleT>.4)rushEnd();}else G.settleT=0;}
       else if(G.bomb){G.bombT+=dt;if(G.bombT>0.5)explodeBomb();}
       else{G.settleT+=dt;if(G.settleT>.3){if(ON)olSettled();else settle();}}
     }else if(BOARD==='tournante'){spinRest(G.marbles,dt);}
     if(ON&&G&&G.pend&&(G.phase!=='roll'||performance.now()-G.pendAt>5000))applyState(G.pend);
   }
+  if(AC)rollSound(lv);
   // Une erreur de dessin ne doit pas arrêter la boucle : sinon l'écran reste figé.
   // Une bille envoyée hors du plateau compte comme perdue, puis disparaît en fondu.
   if(run&&G){
@@ -1639,6 +2347,7 @@ function show(v){
   VIEWS.forEach(function(n){$('scr-'+n).hidden=(n!==v);});
   root.setAttribute('data-view',v==='game'?'game':(v==='home'?'home':'menu'));
   $('pauseBtn').hidden=(v!=='game');
+  cv.style.visibility=(v==='game')?'visible':'hidden'; // hors partie, le plateau ne transparaît jamais derrière les menus
   view=v;
   const mc=document.querySelector('meta[name="theme-color"]');
   if(mc)mc.setAttribute('content',getComputedStyle(root).getPropertyValue('--view-bg').trim());
@@ -1654,19 +2363,38 @@ const RULES={
   tournante:['Glisse ton doigt vers la cible.','Plus tu glisses, plus la bille file.','Le plateau tourne et entraîne les billes avec lui.','Les anneaux valent 10, 20 et 50.','Dans le trou, la bille est perdue.','Arrêtée avant le plateau, elle est perdue aussi.'],
   morpion:['Glisse ton doigt vers le carré.','Plus tu glisses, plus la bille file.','Le centre vaut 100, mais tout le bord est rouge : −5, −10 ou −20 points.','Hors des 25 zones, la bille ne rapporte rien.','Arrêtée avant le plateau, elle est perdue.']
 };
+const MODE_HINT={
+  tactics:'Chacun son tour, avec un nombre fixe de billes. Les power-ups sont en option.',
+  rush:'Un chrono commun, des billes à l’infini, tout le monde lance en même temps. Les points tombent à la fin.'
+};
+const RUSH_RULES={
+  common:['Un seul chrono pour tout le monde.','Glisse ton doigt vers la cible : une nouvelle bille réapparaît 1 seconde après chaque lancer. Les billes sont illimitées.','Chacun joue depuis son côté, en même temps.','À la fin du chrono, les billes sont comptées sur le plateau, puis le classement s’affiche.','Une bille arrêtée hors des zones de points est perdue : elle disparaît.'],
+  cible:['Les anneaux valent 10, 20 et 50. Dans le trou, la bille est perdue.'],
+  tournante:['Le plateau tourne et entraîne les billes. Les anneaux valent 10, 20 et 50.'],
+  morpion:['Le centre vaut 100, mais tout le bord est rouge : −5, −10 ou −20 points.']
+};
+const BOARD_NAME={cible:'Cible de la mort',morpion:'Morpion',tournante:'Cible tournante'};
 const BOARD_HINT={
   cible:'Trois anneaux autour d’un trou. Une bille qui tombe dedans est perdue.',
   tournante:'La cible de base, sur un plateau qui tourne lentement dans le sens des aiguilles d’une montre. Il entraîne les billes : les tirs dévient.',
   morpion:'Un carré de 25 zones, de −20 à 100 points. Le centre rapporte gros, mais le bord fait perdre des points. Pas de trou.'
 };
+let playStep=0;
+const PLAY_STEPS=['st-mode','st-reg','st-bd','st-hum','st-ai'];
 function syncPlay(){
   const bd=(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible';
   $('bdCible').setAttribute('aria-pressed',String(bd==='cible'));
   $('bdMorpion').setAttribute('aria-pressed',String(bd==='morpion'));
   $('bdSpin').setAttribute('aria-pressed',String(bd==='tournante'));
   const tp=$('tgPow');tp.setAttribute('aria-checked',String(!!cfg.power));tp.lastElementChild.textContent=cfg.power?'Oui':'Non';
-  $('bdHint').textContent=BOARD_HINT[bd];
-  $('rules').innerHTML=RULES[bd].concat(cfg.power?['Toutes les 3 billes tirées, un joueur reçoit un pouvoir pour sa prochaine bille.']:[]).map(function(t){return '<li>'+t+'</li>';}).join('');
+  const md=cfg.mode==='rush'?'rush':'tactics';
+  $('mdTactics').setAttribute('aria-pressed',String(md==='tactics'));
+  $('mdRush').setAttribute('aria-pressed',String(md==='rush'));
+  $('rushField').hidden=md!=='rush';
+  $('fsMarbles').hidden=md==='rush';
+  $('fsPow').hidden=md==='rush';
+  $('rt30').setAttribute('aria-pressed',String(cfg.rushT!==60));
+  $('rt60').setAttribute('aria-pressed',String(cfg.rushT===60));
   [1,2,3,4].forEach(function(n){$('nb'+n).setAttribute('aria-pressed',String(cfg.humans===n));});
   const free=4-cfg.humans;
   [0,1,2,3].forEach(function(n){
@@ -1681,9 +2409,104 @@ function syncPlay(){
   $('diffField').hidden=a===0;
   setDisabled($('mMinus'),cfg.marbles<=3);
   setDisabled($('mPlus'),cfg.marbles>=15);
-  $('roster').innerHTML=CHARS.slice(0,seatCount()).map(function(c,i){
-    return '<li class="roster__i"><span class="avbg">'+av(i,56,c.name+(i>=cfg.humans?', IA':', joueur '+(i+1)))+(i>=cfg.humans?botBadge():'')+'</span><span class="roster__n"><strong>'+c.name+'</strong><span class="roster__s">'+(i>=cfg.humans?'<span class="tag-bot">'+BOT_SVG+'IA</span>':'Joueur '+(i+1))+'</span></span></li>';
+  $('roster').innerHTML=CHARS.slice(0,cfg.humans).map(function(c,i){
+    const cur=cleanName(cfg.names[i]);
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(cur||c.name)+', joueur '+(i+1))+'</span><span class="roster__n"><span class="roster__s">Joueur '+(i+1)+'</span><input class="mr-name" data-i="'+i+'" type="text" maxlength="12" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Nom du joueur '+(i+1)+'" placeholder="'+c.name+'" value="'+esc(cfg.names[i]||'')+'"></span></li>';
   }).join('');
+  $('rosterAi').hidden=a===0;
+  $('rosterAi').innerHTML=CHARS.slice(cfg.humans,seatCount()).map(function(c,k){
+    const i=cfg.humans+k;
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,c.name+', IA')+botBadge()+'</span><span class="roster__n"><strong>'+c.name+'</strong><span class="roster__s"><span class="tag-bot">'+BOT_SVG+'IA</span></span></span></li>';
+  }).join('');
+  // Étapes : une seule est visible à la fois.
+  PLAY_STEPS.forEach(function(id,i){$(id).hidden=(i!==playStep);});
+  $('stepInfo').textContent='Étape '+(playStep+1)+' sur '+PLAY_STEPS.length;
+  $('stepDots').innerHTML=PLAY_STEPS.map(function(id,i){return '<i'+(i<=playStep?' data-on="1"':'')+'></i>';}).join('');
+  const last=playStep===PLAY_STEPS.length-1;
+  $('nextBtn').hidden=last;
+  $('startBtn').hidden=!last;
+  $('playBack').textContent=playStep===0?'Retour':'Étape précédente';
+}
+function playGo(d){
+  const n=playStep+d;
+  if(n<0){show('home');return;}
+  if(n>=PLAY_STEPS.length)return;
+  playStep=n;syncPlay();
+  $('scr-play').scrollTop=0;
+  try{$('stepInfo').focus({preventScroll:true});}catch(e){}
+}
+// Aperçus dessinés avec les couleurs de la charte : ils suivent le thème choisi.
+function boardPreview(bd){
+  const ln='stroke:var(--on-color);stroke-width:2';
+  let s='<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" style="fill:var(--board)"/>';
+  if(bd==='morpion'){
+    const fill=function(v){return v<0?'--tomate':v===10?'--lilas':v===20?'--bonbon':'--center';};
+    const o=8,c=16.8;
+    for(let j=0;j<5;j++){for(let i=0;i<5;i++){
+      s+='<rect x="'+(o+i*c).toFixed(1)+'" y="'+(o+j*c).toFixed(1)+'" width="'+c+'" height="'+c+'" style="fill:var('+fill(MORPION[j][i])+');stroke:var(--on-color);stroke-width:1.2"/>';
+    }}
+    s+='<text x="50" y="54" text-anchor="middle" style="font:400 11px var(--font-display);fill:var(--on-color)">100</text>';
+  }else{
+    const spin=bd==='tournante',k=spin?0.8:1;
+    if(spin)s+='<g class="pvspin">';
+    s+='<circle cx="50" cy="50" r="'+(46*k)+'" style="fill:var(--plate);'+ln+'"/>'
+      +'<circle cx="50" cy="50" r="'+(36*k).toFixed(1)+'" style="fill:var(--lilas);'+ln+'"/>'
+      +'<circle cx="50" cy="50" r="'+(27*k).toFixed(1)+'" style="fill:var(--bonbon);'+ln+'"/>'
+      +'<circle cx="50" cy="50" r="'+(17*k).toFixed(1)+'" style="fill:var(--center);'+ln+'"/>'
+      +'<circle cx="50" cy="50" r="'+(9*k).toFixed(1)+'" style="fill:var(--hole);'+ln+'"/>';
+    if(spin){
+      for(let n=0;n<12;n++){
+        const a=n*Math.PI/6,ca=Math.cos(a),sa=Math.sin(a);
+        s+='<line x1="'+(50+ca*31).toFixed(1)+'" y1="'+(50+sa*31).toFixed(1)+'" x2="'+(50+ca*35.5).toFixed(1)+'" y2="'+(50+sa*35.5).toFixed(1)+'" style="stroke:var(--on-color);stroke-width:3;stroke-linecap:round"/>';
+      }
+      s+='</g>';
+      // Deux flèches autour du plateau : il tourne dans le sens des aiguilles d'une montre.
+      [[-60,10],[120,190]].forEach(function(r){
+        const a0=r[0]*Math.PI/180,a1=r[1]*Math.PI/180,R=44;
+        const x0=50+R*Math.cos(a0),y0=50+R*Math.sin(a0),x1=50+R*Math.cos(a1),y1=50+R*Math.sin(a1);
+        const tx=-Math.sin(a1),ty=Math.cos(a1),nx=Math.cos(a1),ny=Math.sin(a1);
+        s+='<path d="M'+x0.toFixed(1)+' '+y0.toFixed(1)+' A'+R+' '+R+' 0 0 1 '+x1.toFixed(1)+' '+y1.toFixed(1)+'" style="fill:none;stroke:var(--on-board);stroke-width:3;stroke-linecap:round"/>'
+          +'<polygon points="'+(x1+tx*6).toFixed(1)+','+(y1+ty*6).toFixed(1)+' '+(x1+nx*4.5).toFixed(1)+','+(y1+ny*4.5).toFixed(1)+' '+(x1-nx*4.5).toFixed(1)+','+(y1-ny*4.5).toFixed(1)+'" style="fill:var(--on-board)"/>';
+      });
+    }
+  }
+  return s+'</svg>';
+}
+function marbleDot(x,y,col){return '<circle cx="'+x+'" cy="'+y+'" r="6" style="fill:var('+col+');stroke:var(--on-color);stroke-width:2"/>';}
+function modePreview(md){
+  let s='<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="16" style="fill:var(--board)"/>'
+    +'<circle cx="50" cy="46" r="38" style="fill:var(--plate);stroke:var(--on-color);stroke-width:2"/>'
+    +'<circle cx="50" cy="46" r="28" style="fill:var(--lilas);stroke:var(--on-color);stroke-width:2"/>'
+    +'<circle cx="50" cy="46" r="18" style="fill:var(--bonbon);stroke:var(--on-color);stroke-width:2"/>'
+    +'<circle cx="50" cy="46" r="8" style="fill:var(--center);stroke:var(--on-color);stroke-width:2"/>';
+  if(md==='rush'){
+    // Plusieurs billes en même temps et un chrono.
+    s+=marbleDot(34,34,'--tomate')+marbleDot(62,30,'--ciel')+marbleDot(44,58,'--menthe')+marbleDot(66,56,'--tomate')+marbleDot(22,52,'--ciel')+marbleDot(54,44,'--menthe');
+    s+='<rect x="4" y="72" width="36" height="24" rx="12" style="fill:var(--soleil);stroke:var(--on-color);stroke-width:2.5"/>'
+      +'<circle cx="22" cy="84" r="7.5" style="fill:none;stroke:var(--on-color);stroke-width:2.2"/>'
+      +'<path d="M22 84V79.5M22 84l3.5 2" style="fill:none;stroke:var(--on-color);stroke-width:2.2;stroke-linecap:round"/>';
+  }else{
+    // Une bille qui part, tour par tour.
+    s+='<line x1="50" y1="86" x2="50" y2="58" style="stroke:var(--on-color);stroke-width:3;stroke-dasharray:2 6;stroke-linecap:round"/>'
+      +marbleDot(50,88,'--tomate')+marbleDot(36,38,'--ciel')+marbleDot(60,40,'--menthe');
+  }
+  return s+'</svg>';
+}
+function buildPreviews(){
+  Array.prototype.forEach.call(document.querySelectorAll('.bdcard__pv[data-bd]'),function(el){el.innerHTML=boardPreview(el.getAttribute('data-bd'));});
+  Array.prototype.forEach.call(document.querySelectorAll('.bdcard__pv[data-md]'),function(el){el.innerHTML=modePreview(el.getAttribute('data-md'));});
+}
+// « Comment jouer » vit dans À propos, dans les réglages.
+function buildHowTo(){
+  const li=function(a){return a.map(function(t){return '<li>'+t+'</li>';}).join('');};
+  $('howto').innerHTML=
+    '<h4 class="lbl">Tactics</h4><ul class="rules hint">'+li(['Chacun son tour, avec un nombre fixe de billes.','Glisse ton doigt vers la cible : plus tu glisses, plus la bille file.','Arrêtée avant le plateau, une bille est perdue.','Power-ups (option) : toutes les 3 billes tirées, un joueur reçoit un pouvoir pour sa prochaine bille.'])+'</ul>'
+    +'<h4 class="lbl">Rush</h4><ul class="rules hint">'+li(RUSH_RULES.common)+'</ul>'
+    +'<h4 class="lbl">Les plateaux</h4><ul class="rules hint">'+li([
+      '<strong>Cible de la mort</strong> : les anneaux valent 10, 20 et 50. Dans le trou, la bille est perdue.',
+      '<strong>Morpion</strong> : le centre vaut 100, mais tout le bord est rouge : −5, −10 ou −20 points. Hors des 25 zones, la bille ne rapporte rien.',
+      '<strong>Cible tournante</strong> : le plateau tourne et entraîne les billes. Les anneaux valent 10, 20 et 50.'
+    ])+'</ul>';
 }
 function syncPrefs(){
   Array.prototype.forEach.call($('themeChips').children,function(b){
@@ -1692,6 +2515,9 @@ function syncPrefs(){
   const t=$('tgCalm');
   t.setAttribute('aria-checked',String(calm));
   t.lastElementChild.textContent=calm?'Oui':'Non';
+  const ts=$('tgSound');
+  ts.setAttribute('aria-checked',String(audioOn()));
+  ts.lastElementChild.textContent=audioOn()?'Oui':'Non';
 }
 function toHome(){
   if(ON){leaveRoom();return;}
@@ -1748,9 +2574,14 @@ function buildTune(){
 }
 
 /* ---------- Boutons ---------- */
-$('goPlay').addEventListener('click',function(){syncPlay();show('play');});
+$('goPlay').addEventListener('click',function(){playStep=0;syncPlay();show('play');});
 $('goSettings').addEventListener('click',function(){settingsFrom='home';syncPrefs();$('openPhys').hidden=false;show('settings');});
-$('playBack').addEventListener('click',function(){show('home');});
+$('playBack').addEventListener('click',function(){playGo(-1);});
+$('nextBtn').addEventListener('click',function(){playGo(1);});
+$('mdTactics').addEventListener('click',function(){cfg.mode='tactics';saveCfg();syncPlay();});
+$('mdRush').addEventListener('click',function(){cfg.mode='rush';saveCfg();syncPlay();});
+$('rt30').addEventListener('click',function(){cfg.rushT=30;saveCfg();syncPlay();});
+$('rt60').addEventListener('click',function(){cfg.rushT=60;saveCfg();syncPlay();});
 $('bdCible').addEventListener('click',function(){cfg.board='cible';saveCfg();syncPlay();});
 $('bdMorpion').addEventListener('click',function(){cfg.board='morpion';saveCfg();syncPlay();});
 $('bdSpin').addEventListener('click',function(){cfg.board='tournante';saveCfg();syncPlay();});
@@ -1764,6 +2595,14 @@ $('tgPow').addEventListener('click',function(){cfg.power=!cfg.power;saveCfg();sy
 $('mMinus').addEventListener('click',function(){if(isOff(this))return;cfg.marbles=Math.max(3,cfg.marbles-1);saveCfg();syncPlay();});
 $('mPlus').addEventListener('click',function(){if(isOff(this))return;cfg.marbles=Math.min(15,cfg.marbles+1);saveCfg();syncPlay();});
 $('startBtn').addEventListener('click',startGame);
+// Le nom se mémorise à chaque lettre ; la liste n'est pas redessinée pour ne pas couper la saisie.
+$('roster').addEventListener('input',function(e){
+  const t=e.target;
+  if(!t.matches||!t.matches('input[data-i]'))return;
+  cfg.names[Number(t.getAttribute('data-i'))]=cleanName(t.value);
+  saveCfg();
+});
+$('roster').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.blur)e.target.blur();});
 
 $('setBack').addEventListener('click',function(){show(settingsFrom);});
 $('setReset').addEventListener('click',function(){tune={};saveTune();applyTune();buildTune();});
@@ -1781,7 +2620,12 @@ $('tgCalm').addEventListener('click',function(){
   savePrefs();applyPrefs();syncPrefs();
 });
 
-$('pauseBtn').addEventListener('click',function(){aim=null;paused=true;show('pause');});
+$('tgSound').addEventListener('click',function(){
+  prefs.sound=!audioOn();
+  savePrefs();syncPrefs();
+  if(audioOn())sfx('ui');
+});
+$('pauseBtn').addEventListener('click',function(){aim=null;raims=[];paused=true;show('pause');});
 $('resume').addEventListener('click',function(){paused=false;show('game');});
 $('restart').addEventListener('click',startGame);
 $('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();$('openPhys').hidden=!!ON;show('settings');});
@@ -1867,7 +2711,7 @@ function beat(){
   const base='rooms/'+ON.code+'/';
   const pl=ON.room.players||{};
   if(pl[UID])api(base+'players/'+UID+'/seen','PUT',NOW).catch(noop);
-  else api(base+'players/'+UID,'PUT',{t:ON.t,seen:NOW}).catch(noop);
+  else api(base+'players/'+UID,'PUT',{t:ON.t,seen:NOW,name:cleanName(cfg.me)}).catch(noop);
   if(ON.host)api(base+'meta/hostSeen','PUT',NOW).catch(noop);
 }
 document.addEventListener('visibilitychange',function(){if(!document.hidden)beat();});
@@ -1898,8 +2742,8 @@ function olCreate(){
         if(++tries<6)return attempt();
         throw new Error('taken');
       }
-      const pl={};pl[UID]={t:now,seen:NOW};
-      return api('rooms/'+code,'PUT',{meta:{host:UID,t:now,status:'lobby',ai:0,marbles:cfg.marbles,power:!!cfg.power,hostSeen:NOW},players:pl})
+      const pl={};pl[UID]={t:now,seen:NOW,name:cleanName(cfg.me)};
+      return api('rooms/'+code,'PUT',{meta:{host:UID,t:now,status:'lobby',ai:0,marbles:cfg.marbles,power:!!cfg.power,board:(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible',hostSeen:NOW},players:pl})
         .then(function(){busy(b,false);enterRoom(code,true);});
     });
   };
@@ -1918,7 +2762,7 @@ function olJoin(){
       if(Object.keys(pl).length+(r.meta.ai||0)>=4){busy(b,false);olErr('Ce salon est complet.');return;}
     }
     const t=Date.now();
-    return api('rooms/'+code+'/players/'+UID,'PUT',{t:t,seen:NOW}).then(function(){busy(b,false);enterRoom(code,false,t);});
+    return api('rooms/'+code+'/players/'+UID,'PUT',{t:t,seen:NOW,name:cleanName(cfg.me)}).then(function(){busy(b,false);enterRoom(code,false,t);});
   }).catch(function(e){busy(b,false);olErr(netErr(e));});
 }
 
@@ -1928,6 +2772,7 @@ function enterRoom(code,host,t){
   ON.beat=setInterval(beat,4000);
   ON.tick=setInterval(host?hostTick:guestTick,2000);
   $('lbCode').textContent=code;
+  $('lbName').value=cfg.me||'';
   $('lbRoster').innerHTML='';
   $('lbHint').textContent='';
   $('lbErr').textContent='';
@@ -1963,10 +2808,12 @@ function lobbyCounts(r){
 }
 function syncLobby(){
   const r=ON.room,m=r.meta,c=lobbyCounts(r),t=c.h+c.ai;
+  const bd=(m.board==='morpion'||m.board==='tournante')?m.board:'cible';
   $('lbRoster').innerHTML=c.order.concat(new Array(c.ai).fill('ai')).map(function(u,i){
     const bot=u==='ai',ch=CHARS[i];
+    const shown=bot?ch.name:(cleanName(u===UID?cfg.me:((r.players||{})[u]||{}).name)||ch.name);
     const sub=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span>':(u===UID?'Toi':'Joueur '+(i+1))+(u===m.host?' · Hôte':'');
-    return '<li class="roster__i"><span class="avbg">'+av(i,56,ch.name+(bot?', IA':', joueur '+(i+1)))+(bot?botBadge():'')+'</span><span class="roster__n"><strong>'+ch.name+'</strong><span class="roster__s">'+sub+'</span></span></li>';
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(shown)+(bot?', IA':', joueur '+(i+1)))+(bot?botBadge():'')+'</span><span class="roster__n"><strong>'+esc(shown)+'</strong><span class="roster__s">'+sub+'</span></span></li>';
   }).join('');
   $('lbHint').textContent='Partie à '+t+' : '+c.h+(c.h>1?' joueurs':' joueur')+(c.ai?' + '+c.ai+' IA':'');
   $('lbHost').hidden=!ON.host;
@@ -1974,6 +2821,10 @@ function syncLobby(){
   $('lbStart').hidden=!ON.host;
   if(ON.host){
     const free=4-c.h;
+    $('lbBdCible').setAttribute('aria-pressed',String(bd==='cible'));
+    $('lbBdMorpion').setAttribute('aria-pressed',String(bd==='morpion'));
+    $('lbBdSpin').setAttribute('aria-pressed',String(bd==='tournante'));
+    $('lbBdHint').textContent=BOARD_HINT[bd];
     [0,1,2,3].forEach(function(n){const b=$('lbAi'+n);b.hidden=n>free;b.setAttribute('aria-pressed',String(c.ai===n));});
     $('lbAiHint').textContent=free===0?'Table complète : pas de place pour une IA.':'Il reste '+free+(free>1?' places':' place')+'. Les IA jouent depuis ton téléphone.';
     $('lbVal').textContent=String(m.marbles);
@@ -1983,7 +2834,7 @@ function syncLobby(){
     setDisabled($('lbStart'),t<2);
     $('lbErr').textContent=t<2?'Il faut au moins 2 places : attends un ami ou ajoute une IA.':'';
   }else{
-    $('lbWait').textContent=(!ON.hostOn?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+m.marbles+' billes par joueur'+(m.power?', power-ups activés.':'.');
+    $('lbWait').textContent=(!ON.hostOn?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+BOARD_NAME[bd]+' · '+m.marbles+' billes par joueur'+(m.power?', power-ups activés.':'.');
     $('lbErr').textContent='';
   }
 }
@@ -2022,21 +2873,26 @@ function hostStart(){
   if(n<2)return;
   const seats=c.order.concat(new Array(c.ai).fill('ai'));
   const z=new Array(n).fill(0);
+  const names=seats.map(function(u,i){
+    if(u==='ai')return CHARS[i].name;
+    return cleanName(u===UID?cfg.me:((r.players||{})[u]||{}).name)||CHARS[i].name;
+  });
   put('',{
     'meta/status':'game',
-    game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,ai:seats.map(function(s){return s==='ai';}),tune:curTune(),pw:!!r.meta.power},
+    game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,names:names,board:(r.meta.board==='morpion'||r.meta.board==='tournante')?r.meta.board:'cible',ai:seats.map(function(s){return s==='ai';}),tune:curTune(),pw:!!r.meta.power},
     state:{seq:0,turn:0,thrown:z,lost:z,done:false,pow:new Array(n).fill(''),quota:new Array(n).fill(r.meta.marbles),awarded:0,qk:0,qp:-1,qs:0},
     throw:null
   },'PATCH');
 }
 function startOnline(r){
   const g=r.game,tu=g.tune||{};
-  BOARD='cible'; // en ligne, seule la Cible de la mort est proposée pour l'instant
+  BOARD=(g.board==='morpion'||g.board==='tournante')?g.board:'cible'; // plateau choisi par l'hôte
+  SPIN=0;sndReset();
   // Tout le monde joue avec la physique de l'hôte.
   if(isFinite(tu.ACC))ACC=tu.ACC;if(isFinite(tu.VISC))VISC=tu.VISC;
   if(isFinite(tu.E_BALL))E_BALL=tu.E_BALL;if(isFinite(tu.E_WALL))E_WALL=tu.E_WALL;if(isFinite(tu.VMAX))VMAX=tu.VMAX;
   G={
-    players:g.n,N:g.N,marbles:[],isAI:g.ai.slice(),seats:g.seats.slice(),gid:g.id,mySeat:g.seats.indexOf(UID),
+    players:g.n,N:g.N,marbles:[],isAI:g.ai.slice(),seats:g.seats.slice(),gid:g.id,mySeat:g.seats.indexOf(UID),names:g.seats.map(function(u,i){return cleanName((g.names||[])[i])||CHARS[i].name;}),
     seq:-1,rollSeq:-1,pend:null,
     thrown:new Array(g.n).fill(0),scores:new Array(g.n).fill(0),lost:new Array(g.n).fill(0),
     turn:0,phase:'aim',t:calm?INTRO_T:0,settleT:0,enter:calm?ENTER_T:0,
@@ -2057,7 +2913,7 @@ function onlineUpdate(r){
   (g.ai||[]).forEach(function(a,i){
     if(a&&!G.isAI[i]){
       G.isAI[i]=true;
-      note(i===G.mySeat?'Tu as été déconnecté : une IA joue à ta place.':CHARS[i].name+' est parti : une IA prend sa place.');
+      note(i===G.mySeat?'Tu as été déconnecté : une IA joue à ta place.':nm(i)+' est parti : une IA prend sa place.');
     }
   });
   if(st&&(st.seq>G.seq||(st.seq===G.seq&&(st.qk||0)>(G.qk||0)))&&(!G.pend||st.seq>=G.pend.seq)){G.pend=st;G.pendAt=performance.now();}
@@ -2177,6 +3033,16 @@ $('olCode').addEventListener('input',function(){
 });
 $('olCode').addEventListener('keydown',function(e){if(e.key==='Enter')olJoin();});
 $('lbLeave').addEventListener('click',function(){leaveRoom();});
+let nameT=0;
+$('lbName').addEventListener('input',function(){
+  cfg.me=cleanName(this.value);saveCfg();
+  if(ON&&ON.room&&ON.room.meta)syncLobby();
+  clearTimeout(nameT);
+  nameT=setTimeout(function(){
+    if(ON)api('rooms/'+ON.code+'/players/'+UID+'/name','PUT',cfg.me).catch(noop);
+  },400);
+});
+$('lbName').addEventListener('keydown',function(e){if(e.key==='Enter')this.blur();});
 $('lbStart').addEventListener('click',function(){if(!isOff(this))hostStart();});
 $('lbCopy').addEventListener('click',function(){
   if(!ON)return;
@@ -2202,6 +3068,14 @@ $('lbPow').addEventListener('click',function(){
   if(!ON||!ON.host||!ON.room||!ON.room.meta)return;
   put('meta/power',!ON.room.meta.power);
 });
+function lbBoard(v){
+  if(!ON||!ON.host||!ON.room||!ON.room.meta)return;
+  cfg.board=v;saveCfg();
+  put('meta/board',v);
+}
+$('lbBdCible').addEventListener('click',function(){lbBoard('cible');});
+$('lbBdMorpion').addEventListener('click',function(){lbBoard('morpion');});
+$('lbBdSpin').addEventListener('click',function(){lbBoard('tournante');});
 $('lbMinus').addEventListener('click',function(){if(!isOff(this))lbMarbles(-1);});
 $('lbPlus').addEventListener('click',function(){if(!isOff(this))lbMarbles(1);});
 
@@ -2209,10 +3083,11 @@ $('lbPlus').addEventListener('click',function(){if(!isOff(this))lbMarbles(1);});
 document.addEventListener('click',function(e){
   const b=e.target.closest&&e.target.closest('.mr-btn,.mr-chip,.mr-toggle');
   if(!b)return;
+  sfx('ui');
   b.classList.remove('tap');void b.offsetWidth;b.classList.add('tap');
 },true);
 document.addEventListener('animationend',function(e){
-  if(e.target.classList)e.target.classList.remove('tap');
+  if(e.target.classList)e.target.classList.remove('tap','enter');
 });
 
 /* ---------- Démarrage ---------- */
@@ -2220,6 +3095,8 @@ applyPrefs();
 applyTune();
 buildHome();
 buildTune();
+buildPreviews();
+buildHowTo();
 syncPlay();
 syncPrefs();
 syncOnlineUi();
