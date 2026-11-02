@@ -2,24 +2,33 @@
   <title>Marble Rush</title>
   <!-- Fond lilas de la charte -->
   <rect width="1024" height="1024" fill="#B79CFF"/>
-  <!-- Cible : plateau sombre, anneaux 10 / 20 / 50 et trou central -->
-  <g transform="translate(560 560)">
-    <circle r="372" fill="#1B1530"/>
-    <circle r="318" fill="#FFF8EE"/>
-    <circle r="300" fill="#B79CFF" stroke="#1B1530" stroke-width="14"/>
-    <circle r="214" fill="#FF9ED2" stroke="#1B1530" stroke-width="14"/>
-    <circle r="132" fill="#FFF8EE" stroke="#1B1530" stroke-width="14"/>
-    <circle r="72" fill="#1B1530"/>
+  <!-- Cible : plateau sombre, anneaux 10 / 20 / 50, trou central -->
+  <g transform="translate(556 580)">
+    <circle r="392" fill="#1B1530"/>
+    <circle r="352" fill="#FFF8EE" stroke="#1B1530" stroke-width="14"/>
+    <circle r="262" fill="#FF9ED2" stroke="#1B1530" stroke-width="14"/>
+    <circle r="168" fill="#FFF8EE" stroke="#1B1530" stroke-width="14"/>
+    <circle r="86" fill="#1B1530"/>
   </g>
-  <!-- Traînée de vitesse de la bille -->
-  <g stroke="#1B1530" stroke-width="30" stroke-linecap="round" fill="none">
-    <path d="M303 119 L363 186"/>
-    <path d="M199 151 L291 256"/>
-    <path d="M153 251 L213 318"/>
+  <!-- Deux petites billes des copains posées sur la cible -->
+  <g stroke="#1B1530" stroke-width="14">
+    <circle cx="742" cy="440" r="58" fill="#5B9BFF"/>
+    <circle cx="690" cy="790" r="58" fill="#5ED08F"/>
+    <circle cx="400" cy="800" r="58" fill="#FFD23F"/>
   </g>
-  <!-- La bille : aplat tomate, contour épais, reflet et symbole -->
-  <g transform="translate(400 380)">
-    <circle r="132" fill="#FF6A3D" stroke="#1B1530" stroke-width="20"/>
-    <path d="M-104 -20 A110 110 0 0 1 20 -110" stroke="#FFF8EE" stroke-width="26" stroke-linecap="round" fill="none" opacity=".9"/>
+  <!-- Traînée de vitesse -->
+  <g stroke="#1B1530" stroke-width="32" stroke-linecap="round" fill="none">
+    <path d="M300 96 L352 150"/>
+    <path d="M186 138 L262 222"/>
+    <path d="M118 244 L172 300"/>
+  </g>
+  <!-- La bille : aplat tomate, bande claire, contour épais, symbole éclair -->
+  <g transform="translate(372 376)">
+    <circle r="172" fill="#1B1530" opacity=".0"/>
+    <clipPath id="b"><circle r="160"/></clipPath>
+    <circle r="160" fill="#FF6A3D"/>
+    <g clip-path="url(#b)"><rect x="-170" y="-170" width="150" height="340" fill="#FF9A78"/></g>
+    <circle r="160" fill="none" stroke="#1B1530" stroke-width="24"/>
+    <g transform="translate(-100 -100) scale(2.0)"><path d="M57 20L34 54H48L42 80L66 44H52Z" fill="#1B1530"/></g>
   </g>
 </svg>
