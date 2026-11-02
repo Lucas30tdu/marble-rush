@@ -86,6 +86,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
 .head{display:grid;gap:var(--space-2)}
 .actions{display:grid;gap:var(--space-3);margin-top:auto}
 .actions .mr-btn{width:100%}
+#scr-settings .actions{position:sticky;bottom:calc(-1 * var(--space-5));z-index:2;margin-top:auto;padding:var(--space-3) 0 var(--space-5);background:var(--bg)}
 
 /* Typographie de la charte */
 .t-xl{font:400 3.5rem/1 var(--font-display);text-wrap:balance}
@@ -475,6 +476,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         </div>
         <p class="hint">Auto suit le réglage de ton téléphone.</p>
       </fieldset>
+      <button type="button" id="tgMusic" class="mr-toggle" role="switch" aria-checked="true">
+        <span>Musique</span><span class="mr-switch" aria-hidden="true">Oui</span>
+      </button>
       <button type="button" id="tgSound" class="mr-toggle" role="switch" aria-checked="true">
         <span>Sons</span><span class="mr-switch" aria-hidden="true">Oui</span>
       </button>
@@ -493,9 +497,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <div class="howto" style="border:0;padding:0"><h4 style="margin:var(--space-3) 0 var(--space-2);font:400 1.25rem/1.2 var(--font-display)">Comment jouer</h4><div id="howto"></div></div>
         <dl class="about__list">
           <div><dt>Nom</dt><dd id="abName">Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.109</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793462390-5200</dd></div>
-          <div><dt>Dernière modification</dt><dd>31/10/2026</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.111</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793601757-66ed</dd></div>
+          <div><dt>Dernière modification</dt><dd>02/11/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
       </section>
@@ -940,13 +944,14 @@ function marbleSvg(i){
 }
 
 /* ---------- Préférences d’affichage ---------- */
-let prefs={theme:'auto',calm:null,sound:true};
+let prefs={theme:'auto',calm:null,sound:true,music:true};
 try{
   const s=JSON.parse(localStorage.getItem('marble-rush-prefs')||'null');
   if(s){
     if(['auto','clair','sombre','contraste'].indexOf(s.theme)>=0)prefs.theme=s.theme;
     if(typeof s.calm==='boolean')prefs.calm=s.calm;
     if(typeof s.sound==='boolean')prefs.sound=s.sound;
+    if(typeof s.music==='boolean')prefs.music=s.music;
   }
 }catch(e){}
 function savePrefs(){try{localStorage.setItem('marble-rush-prefs',JSON.stringify(prefs));}catch(e){}}
@@ -999,26 +1004,71 @@ const gate={};
 function audioOn(){return prefs.sound!==false;}
 function sndReset(){turnKey=null;sndAward=null;qN=0;}
 // Le navigateur n'autorise le son qu'après un geste : on le crée au premier toucher.
+// Le contexte audio sert aux bruitages et à la musique : il est créé une seule fois.
+function initCtx(){
+  if(AC)return true;
+  const C=window.AudioContext||window.webkitAudioContext;
+  if(!C)return false;
+  try{
+    AC=new C();
+    MASTER=AC.createGain();MASTER.gain.value=0.8;
+    const lim=AC.createDynamicsCompressor();
+    MASTER.connect(lim);lim.connect(AC.destination);
+    const len=Math.floor(AC.sampleRate*1.5),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
+    NOISE=buf;
+  }catch(e){AC=null;return false;}
+  return true;
+}
 function ensureAudio(){
   if(!audioOn())return false;
-  if(!AC){
-    const C=window.AudioContext||window.webkitAudioContext;
-    if(!C)return false;
-    try{
-      AC=new C();
-      MASTER=AC.createGain();MASTER.gain.value=0.8;
-      const lim=AC.createDynamicsCompressor();
-      MASTER.connect(lim);lim.connect(AC.destination);
-      const len=Math.floor(AC.sampleRate*1.5),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);
-      for(let i=0;i<len;i++)d[i]=Math.random()*2-1;
-      NOISE=buf;
-    }catch(e){AC=null;return false;}
-  }
+  if(!initCtx())return false;
   if(AC.state!=='running'){try{AC.resume();}catch(e){}}
   return true;
 }
+/* ---------- Musique de fond (Marble Groove, en boucle sur tous les écrans) ---------- */
+const MUS_VOL=0.28;     // volume de la musique : en dessous des bruitages
+let MUS=null,musStopT=0;
+function musicOn(){return prefs.music!==false;}
+// Le navigateur n'autorise la lecture qu'après un geste : on lance la musique au premier toucher.
+function musicStart(){
+  if(!musicOn()||document.hidden)return;
+  clearTimeout(musStopT);
+  if(!MUS){
+    const el=new Audio('marble-groove.mp3');
+    el.loop=true;el.preload='auto';
+    try{el.setAttribute('playsinline','');}catch(e){}
+    MUS={el:el,g:null};
+    // Le volume passe par Web Audio : sur iPhone, le volume d'un élément audio ne se règle pas.
+    if(initCtx()){
+      try{
+        const src=AC.createMediaElementSource(el);
+        MUS.g=AC.createGain();MUS.g.gain.value=0;
+        src.connect(MUS.g);MUS.g.connect(AC.destination);
+      }catch(e){MUS.g=null;}
+    }
+    if(!MUS.g)el.volume=MUS_VOL;
+  }
+  if(AC&&AC.state!=='running'){try{AC.resume();}catch(e){}}
+  if(MUS.g)MUS.g.gain.setTargetAtTime(MUS_VOL,AC.currentTime,0.5); // entrée en fondu
+  if(MUS.el.paused){
+    const p=MUS.el.play();
+    if(p&&p.catch)p.catch(function(){}); // refusé : on réessaie au prochain toucher
+  }
+}
+function musicStop(){
+  if(!MUS)return;
+  if(MUS.g)MUS.g.gain.setTargetAtTime(0,AC.currentTime,0.12);
+  clearTimeout(musStopT);
+  musStopT=setTimeout(function(){if(MUS&&!musicOn())MUS.el.pause();},MUS.g?500:0);
+}
 ['pointerdown','touchend','click','keydown'].forEach(function(n){
-  document.addEventListener(n,function(){ensureAudio();},true);
+  document.addEventListener(n,function(){ensureAudio();musicStart();},true);
+});
+// La musique se met en pause quand l'écran n'est plus visible, et reprend au retour.
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){if(MUS)MUS.el.pause();}
+  else if(MUS)musicStart();
 });
 function open(k,gap){
   const t=AC.currentTime;
@@ -3318,6 +3368,9 @@ function syncPrefs(){
   const t=$('tgCalm');
   t.setAttribute('aria-checked',String(calm));
   t.lastElementChild.textContent=calm?'Oui':'Non';
+  const tm=$('tgMusic');
+  tm.setAttribute('aria-checked',String(musicOn()));
+  tm.lastElementChild.textContent=musicOn()?'Oui':'Non';
   const ts=$('tgSound');
   ts.setAttribute('aria-checked',String(audioOn()));
   ts.lastElementChild.textContent=audioOn()?'Oui':'Non';
@@ -3430,6 +3483,11 @@ $('tgCalm').addEventListener('click',function(){
   savePrefs();applyPrefs();syncPrefs();
 });
 
+$('tgMusic').addEventListener('click',function(){
+  prefs.music=!musicOn();
+  savePrefs();syncPrefs();
+  if(musicOn())musicStart();else musicStop();
+});
 $('tgSound').addEventListener('click',function(){
   prefs.sound=!audioOn();
   savePrefs();syncPrefs();
