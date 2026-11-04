@@ -500,9 +500,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <div class="howto" style="border:0;padding:0"><h4 style="margin:var(--space-3) 0 var(--space-2);font:400 1.25rem/1.2 var(--font-display)">Comment jouer</h4><div id="howto"></div></div>
         <dl class="about__list">
           <div><dt>Nom</dt><dd id="abName">Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.113</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793602511-31c7</dd></div>
-          <div><dt>Dernière modification</dt><dd>02/11/2026</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.115</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793794506-4a38</dd></div>
+          <div><dt>Dernière modification</dt><dd>04/11/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
       </section>
@@ -3802,10 +3802,14 @@ function applyState(st){
   G.marbles=(st.ms||[]).map(function(a){
     const m=makeMarble(a[0],a[1],a[2],0,0);
     m.entered=true;m.roll=a[3]||0;m.dir=a[4]||0;
+    // Cible tournante : une bille arrêtée tourne avec le plateau (sinon elle reste figée tant que personne ne tire).
+    if(BOARD==='tournante'){m.rides=true;m.vx=-OMEGA*m.y;m.vy=OMEGA*m.x;}
     if(a[5])m.r=a[5];
     if(a[6])m.mass=a[6];
     return m;
   });
+  // Le décor du plateau tournant reprend l'angle de l'hôte : billes et plateau restent alignés sur tous les téléphones.
+  if(BOARD==='tournante'&&isFinite(st.sp))SPIN=st.sp;
   const n=G.players;
   for(let p=0;p<n;p++){G.thrown[p]=(st.thrown&&st.thrown[p])||0;G.lost[p]=(st.lost&&st.lost[p])||0;}
   if(G.power){
@@ -3853,6 +3857,7 @@ function olSettled(){
   const st={
     seq:seq,turn:turn,
     thrown:G.thrown.slice(),lost:G.lost.slice(),done:done,
+    sp:rd(((SPIN%TAU)+TAU)%TAU,1000),
     ms:G.marbles.filter(function(m){return m.fall<0&&!m.out;}).map(function(m){
       return [m.owner,rd(m.x,100),rd(m.y,100),rd(m.roll,10),rd(m.dir,1000),rd(m.r,10),m.mass];
     })
