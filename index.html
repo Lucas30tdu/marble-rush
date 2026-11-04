@@ -500,8 +500,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <div class="howto" style="border:0;padding:0"><h4 style="margin:var(--space-3) 0 var(--space-2);font:400 1.25rem/1.2 var(--font-display)">Comment jouer</h4><div id="howto"></div></div>
         <dl class="about__list">
           <div><dt>Nom</dt><dd id="abName">Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.115</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793794506-4a38</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.117</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793795964-edbb</dd></div>
           <div><dt>Dernière modification</dt><dd>04/11/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -1932,6 +1932,7 @@ function startQuake(p){
   G.preQuake=true;
   quake(p);
   G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+  G.rsteps=0;G.liveAt=0;
 }
 // Bombe : la bille explose quand elle s'arrête et repousse toutes les autres billes autour d'elle.
 function explodeBomb(){
@@ -1988,6 +1989,7 @@ function launch(p,ux,uy,v){
   G.marbles.push(mb);sfx('launch',Math.min(1,v/VMAX),mb.r>MR);
   G.thrown[p]++;
   G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+  G.rsteps=0;G.liveAt=0;
 }
 
 /* ---------- Saisie ---------- */
@@ -3065,10 +3067,12 @@ function frame(now){
         const lost=stepPhysics(G.marbles,STEP);
         if(BOARD==='tournante')SPIN+=OMEGA*STEP;
         for(const m of lost)G.lost[m.owner]++;
+        G.rsteps=(G.rsteps||0)+1;
         acc-=STEP;n++;
       }
       if(n>=20)acc=0;
       playEvents(REC);REC=null;
+      if(ON&&ON.host)hostLive();
       G.marbles=G.marbles.filter(function(m){return m.fall<FALL_T;});
       lv=(view==='game'&&!paused)?rollLevel(G.marbles):0;
       let moving=false;
@@ -3080,7 +3084,7 @@ function frame(now){
       else if(G.bomb){G.bombT+=dt;if(G.bombT>0.5)explodeBomb();}
       else{G.settleT+=dt;if(G.settleT>.3){if(ON)olSettled();else settle();}}
     }else if(BOARD==='tournante'){spinRest(G.marbles,dt);}
-    if(ON&&G&&G.pend&&(G.phase!=='roll'||performance.now()-G.pendAt>5000))applyState(G.pend);
+    if(ON&&G&&G.pend&&(G.phase!=='roll'||performance.now()-G.pendAt>1500))applyState(G.pend);
   }
   if(AC)rollSound(lv);
   // Une erreur de dessin ne doit pas arrêter la boucle : sinon l'écran reste figé.
@@ -3752,7 +3756,7 @@ function hostStart(){
     'meta/status':'game',
     game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,names:names,board:(r.meta.board==='morpion'||r.meta.board==='tournante')?r.meta.board:'cible',ai:seats.map(function(s){return s==='ai';}),tune:curTune(),pw:!!r.meta.power},
     state:{seq:0,turn:0,thrown:z,lost:z,done:false,pow:new Array(n).fill(''),quota:new Array(n).fill(r.meta.marbles),awarded:0,qk:0,qp:-1,qs:0},
-    throw:null
+    throw:null,live:null
   },'PATCH');
 }
 function startOnline(r){
@@ -3795,6 +3799,61 @@ function onlineUpdate(r){
     G.rollSeq=th.seq;aim=null;
     launch(th.p,th.ux,th.uy,th.v);
   }
+  if(!ON.host&&r.live)applyLive(r.live);
+}
+
+/* ---------- Trajectoire commune ----------
+   Chaque téléphone rejoue le lancer, mais de petits écarts (retard réseau, cadence d'affichage, collisions) font diverger les billes.
+   L'hôte envoie donc un instantané de toutes les billes ~5 fois par seconde (rooms/CODE/live) :
+   les invités s'y recalent (puis rattrapent le temps écoulé) et ne s'éloignent jamais de plus de 0,2 s de l'hôte. */
+const LIVE_EVERY=48; // pas de simulation entre deux instantanés (48 pas de 1/240 s = 0,2 s)
+// Identifie le mouvement en cours : un lancer, ou un tremblement de terre.
+function liveKey(){return G.preQuake?('q'+G.seq+':'+(G.qk||0)):('r'+G.rollSeq);}
+function packMarble(m){
+  const a=function(v){return Math.round(v*10)/10;},b=function(v){return Math.round(v*1000)/1000;};
+  const f=(m.entered?1:0)|(m.out?2:0)|(m.rides?4:0)|(m.vf?8:0)|(m.magnet?16:0)|(m.bomb?32:0);
+  return [m.owner,a(m.x),a(m.y),a(m.vx),a(m.vy),a(m.roll),b(m.dir),b(m.fall),f,a(m.r),m.mass,b(m.magT||0),a(m.fr||0),b(m.fa||0)];
+}
+function unpackMarble(a){
+  const m=makeMarble(a[0],a[1],a[2],a[3],a[4]);
+  m.roll=a[5];m.dir=a[6];m.fall=a[7];
+  const f=a[8]|0;
+  m.entered=!!(f&1);m.out=!!(f&2);m.rides=!!(f&4);m.vf=!!(f&8);m.magnet=!!(f&16);m.bomb=!!(f&32);
+  m.r=a[9]||MR;m.mass=a[10]||1;m.magT=a[11]||0;m.fr=a[12]||0;m.fa=a[13]||0;
+  return m;
+}
+// Hôte : publie l'instantané. Une seule requête à la fois, sans nouvel essai, pour qu'un vieil instantané n'en écrase jamais un récent.
+function hostLive(){
+  if(!ON||!ON.host||!G||!G.gid||G.phase!=='roll'||ON.liveBusy)return;
+  const n=G.rsteps||0;
+  if(n-(G.liveAt||0)<LIVE_EVERY)return;
+  G.liveAt=n;ON.liveBusy=true;
+  const on=ON;
+  api('rooms/'+on.code+'/live','PUT',{k:liveKey(),n:n,sp:Math.round(SPIN*1000)/1000,ms:G.marbles.filter(function(m){return !m.out;}).map(packMarble)})
+    .then(noop,noop).then(function(){on.liveBusy=false;});
+}
+// Invité : reprend l'instantané de l'hôte, puis avance jusqu'à l'instant présent.
+function applyLive(lv){
+  if(!G||!G.gid||!G.seats||(G.phase!=='roll'&&G.phase!=='wait'))return;
+  const k=liveKey();
+  if(lv.k!==k)return;
+  if(!G.preQuake&&!(G.rollSeq>G.seq))return; // l'état final de ce lancer est déjà arrivé
+  if(G.liveK!==k){G.liveK=k;G.liveN=-1;}
+  const n=lv.n|0;
+  if(n<=G.liveN)return;
+  G.liveN=n;
+  const ms=(lv.ms||[]).map(unpackMarble);
+  if(isFinite(lv.sp))SPIN=lv.sp;
+  const d=(G.rsteps||0)-n;
+  if(d>0&&d<=360){
+    REC=null;
+    for(let i=0;i<d;i++){stepPhysics(ms,STEP);if(BOARD==='tournante')SPIN+=OMEGA*STEP;}
+  }else G.rsteps=n;
+  G.marbles=ms;
+  const bm=ms.filter(function(m){return m.bomb;})[0]||null;
+  G.bomb=bm;if(!bm)G.bombT=0;
+  G.phase='roll';G.settleT=0;
+  recompute();
 }
 function applyState(st){
   if(!G)return;
