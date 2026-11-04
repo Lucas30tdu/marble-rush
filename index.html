@@ -500,8 +500,8 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
         <div class="howto" style="border:0;padding:0"><h4 style="margin:var(--space-3) 0 var(--space-2);font:400 1.25rem/1.2 var(--font-display)">Comment jouer</h4><div id="howto"></div></div>
         <dl class="about__list">
           <div><dt>Nom</dt><dd id="abName">Marble Rush</dd></div>
-          <div><dt>Version du jeu</dt><dd>1.117</dd></div>
-          <div><dt>Version de l'artefact</dt><dd>1793795964-edbb</dd></div>
+          <div><dt>Version du jeu</dt><dd>1.120</dd></div>
+          <div><dt>Version de l'artefact</dt><dd>1793797091-082b</dd></div>
           <div><dt>Dernière modification</dt><dd>04/11/2026</dd></div>
           <div><dt>Créé par</dt><dd>Lucas Courcy</dd></div>
         </dl>
@@ -518,6 +518,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       <div class="actions" style="margin-top:0">
         <button type="button" id="resume" class="mr-btn">Reprendre</button>
         <button type="button" id="restart" class="mr-btn mr-btn--soleil">Recommencer</button>
+        <button type="button" id="toLobbyP" class="mr-btn mr-btn--soleil" hidden>Retour au salon</button>
         <button type="button" id="toPrefs" class="mr-btn mr-btn--quiet">Paramètres</button>
         <button type="button" id="toHome" class="mr-btn mr-btn--tomate">Menu principal</button>
       </div>
@@ -533,8 +534,9 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       <div id="resHero" class="mr-card mr-card--lilas hero"></div>
       <ol id="resList" class="rank"></ol>
       <div class="actions">
-        <p id="resWait" class="hint" hidden>L’hôte peut relancer une partie.</p>
+        <p id="resWait" class="hint" hidden>L’hôte peut relancer une partie, ou changer les réglages et le mode de jeu.</p>
         <button type="button" id="again" class="mr-btn mr-btn--soleil">Rejouer</button>
+        <button type="button" id="toLobby" class="mr-btn mr-btn--quiet" hidden>Changer les réglages</button>
         <button type="button" id="toHome2" class="mr-btn mr-btn--quiet">Menu principal</button>
       </div>
     </div>
@@ -583,6 +585,43 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
       </fieldset>
       <div id="lbHost" class="panel" style="flex:none;width:100%">
         <fieldset class="field">
+          <legend class="lbl">Mode de jeu</legend>
+          <div class="bdlist" role="group" aria-label="Choix du mode de jeu">
+            <button type="button" id="lbMdTactics" class="bdcard" aria-pressed="true">
+              <span class="bdcard__pv" data-md="tactics"></span>
+              <span class="bdcard__tx"><strong>Tactics</strong><span class="bdcard__d">Chacun son tour, avec un nombre fixe de billes.</span></span>
+            </button>
+            <button type="button" id="lbMdRush" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="rush"></span>
+              <span class="bdcard__tx"><strong>Rush</strong><span class="bdcard__d">Un chrono, tout le monde lance en même temps.</span></span>
+            </button>
+            <button type="button" id="lbMdPetanque" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="petanque"></span>
+              <span class="bdcard__tx"><strong>Pétanque</strong><span class="bdcard__d">Un cochonet, 3 billes par joueur. Premier à 13 points.</span></span>
+            </button>
+            <button type="button" id="lbMdSniper" class="bdcard" aria-pressed="false">
+              <span class="bdcard__pv" data-md="sniper"></span>
+              <span class="bdcard__tx"><strong>Sniper</strong><span class="bdcard__d">Va le plus loin possible, mais pas dans le vide. Chaque tir marque tout de suite.</span></span>
+            </button>
+          </div>
+        </fieldset>
+        <fieldset class="field" id="lbRushField" hidden>
+          <legend class="lbl">Durée du chrono</legend>
+          <div class="chips" role="group" aria-label="Durée du chrono">
+            <button type="button" id="lbRt30" class="mr-chip" aria-pressed="true">30 secondes</button>
+            <button type="button" id="lbRt60" class="mr-chip" aria-pressed="false">60 secondes</button>
+          </div>
+          <p class="hint">Un compte à rebours de 3 secondes précède le départ.</p>
+        </fieldset>
+        <fieldset class="field" id="lbPtField" hidden>
+          <legend class="lbl">Format</legend>
+          <div class="chips" role="group" aria-label="Format de la partie">
+            <button type="button" id="lbPtSolo" class="mr-chip" aria-pressed="true">Individuel</button>
+            <button type="button" id="lbPtTeams" class="mr-chip" aria-pressed="false">Par équipes</button>
+          </div>
+          <p id="lbPtHint" class="hint"></p>
+        </fieldset>
+        <fieldset class="field" id="lbBdField">
           <legend class="lbl">Plateau</legend>
           <div class="chips" role="group" aria-label="Choix du plateau">
             <button type="button" id="lbBdCible" class="mr-chip" aria-pressed="true">Cible de la mort</button>
@@ -601,7 +640,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
           </div>
           <p id="lbAiHint" class="hint"></p>
         </fieldset>
-        <fieldset class="field">
+        <fieldset class="field" id="lbMarblesField">
           <legend class="lbl">Billes par joueur</legend>
           <div class="stepper">
             <button type="button" id="lbMinus" class="mr-btn mr-btn--icon" aria-label="Moins de billes">−</button>
@@ -610,7 +649,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-acti
           </div>
           <p class="hint">Tu es l’hôte : tu règles la partie, et la physique de ton téléphone sert pour tout le monde.</p>
         </fieldset>
-        <fieldset class="field">
+        <fieldset class="field" id="lbPowField">
           <legend class="lbl">Power-ups</legend>
           <button type="button" id="lbPow" class="mr-toggle" role="switch" aria-checked="false">
             <span>Activer les power-ups</span><span class="mr-switch" aria-hidden="true">Non</span>
@@ -1526,17 +1565,17 @@ function petTeamsOk(){
   return a>0&&b>0;
 }
 function sideLetter(s){return s===1?'B':'A';}
-function petActive(){return (G&&(G.phase==='aim'||G.phase==='roll'))?G.turn:-1;}
+function petActive(){return (G&&(G.phase==='aim'||G.phase==='roll'||(G.seats&&G.phase==='wait')))?G.turn:-1;}
 function petSideName(s){
   const P=G.pt;
   if(P.teams)return 'Équipe '+sideLetter(s);
   return nm(s);
 }
 function petInit(){
-  const n=G.players,teams=cfg.pFormat==='teams'&&n>1;
+  const n=G.players,teams=(G.fmt||cfg.pFormat)==='teams'&&n>1,tmc=G.tm||cfg.teams;
   const sideOf=[],sides=[];
   for(let p=0;p<n;p++){
-    const sd=teams?(cfg.teams[p]===1?1:0):p;
+    const sd=teams?(tmc[p]===1?1:0):p;
     sideOf.push(sd);
     if(sides.indexOf(sd)<0)sides.push(sd);
   }
@@ -1609,6 +1648,7 @@ function petThrow(p,ux,uy,v){
   G.marbles.push(m);sfx('launch',Math.min(1,v/VMAX),false);
   G.thrown[p]++;P.seq++;P.lastT[p]=P.seq;P.lastSide=P.sideOf[p];P.lastP=p;
   G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+  G.rsteps=0;G.liveAt=0;
 }
 // Les billes sont arrêtées : cochonet sorti = manche rejouée ; sinon le suivant joue, ou la manche se termine.
 function petSettle(){
@@ -1658,8 +1698,9 @@ function petAfterScore(){
   const P=G.pt;
   let champ=-1;
   P.sides.forEach(function(sd){if(P.pts[sd]>=P.win&&(champ<0||P.pts[sd]>P.pts[champ]))champ=sd;});
-  if(champ>=0){endGame();return;}
+  if(champ>=0){endGame();if(ON&&ON.host)olPublish();return;}
   petNewRound(false);
+  if(ON&&ON.host)olPublish();
 }
 function petTick(dt){
   const P=G.pt;
@@ -1667,14 +1708,13 @@ function petTick(dt){
   P.cochT+=dt;
   if(P.banner&&P.bannerT<2.2)P.bannerT+=dt;
   if(G.phase==='pscore'){
-    P.res.t+=dt;
-    if(P.res.t>=3.6)petAfterScore();
+    if(P.res){P.res.t+=dt;if(P.res.t>=3.6&&(!ON||ON.host))petAfterScore();}
     return;
   }
-  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T){
+  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T&&(!ON||ON.host)){
     if(G.aiThink==null){G.aiShot=petAiShot();G.aiThink=AI_DELAY;}
     G.aiThink-=dt;
-    if(G.aiThink<=0){const sh=G.aiShot;petThrow(G.turn,sh.ux,sh.uy,sh.v);}
+    if(G.aiThink<=0){const sh=G.aiShot;if(ON)olThrow(G.turn,sh.ux,sh.uy,sh.v);else petThrow(G.turn,sh.ux,sh.uy,sh.v);}
   }
 }
 // IA : elle simule plusieurs tirs (pointer vers le cochonet, ou tirer sur la bille adverse la mieux placée) et garde l'un des meilleurs.
@@ -1750,10 +1790,10 @@ function petEnd(){
 }
 // ---------- Sniper ----------
 function snInit(){
-  const n=G.players,teams=cfg.pFormat==='teams'&&n>1;
+  const n=G.players,teams=(G.fmt||cfg.pFormat)==='teams'&&n>1,tmc=G.tm||cfg.teams;
   const sideOf=[],sides=[];
   for(let p=0;p<n;p++){
-    const sd=teams?(cfg.teams[p]===1?1:0):p;
+    const sd=teams?(tmc[p]===1?1:0):p;
     sideOf.push(sd);
     if(sides.indexOf(sd)<0)sides.push(sd);
   }
@@ -1770,6 +1810,7 @@ function snThrow(p,ux,uy,v){
   sfx('launch',Math.min(1,v/VMAX),false);
   G.thrown[p]++;
   G.phase='roll';G.settleT=0;G.aiThink=null;G.aiShot=null;
+  G.rsteps=0;G.liveAt=0;
 }
 // Les billes sont arrêtées : la bille lancée marque tout de suite les points de sa zone (0 si elle est tombée dans le vide). Ils restent acquis.
 function snSettle(){
@@ -1796,10 +1837,10 @@ function snSettle(){
 function snTick(dt){
   if(G.t<INTRO_T)return;
   if(G.snPop){G.snPop.t+=dt;if(G.snPop.t>1.6)G.snPop=null;}
-  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T&&!ON){
+  if(G.phase==='aim'&&G.isAI[G.turn]&&G.enter>=ENTER_T&&(!ON||ON.host)){
     if(G.aiThink==null){G.aiShot=snAiShot();G.aiThink=AI_DELAY;}
     G.aiThink-=dt;
-    if(G.aiThink<=0){const sh=G.aiShot;snThrow(G.turn,sh.ux,sh.uy,sh.v);}
+    if(G.aiThink<=0){const sh=G.aiShot;if(ON)olThrow(G.turn,sh.ux,sh.uy,sh.v);else snThrow(G.turn,sh.ux,sh.uy,sh.v);}
   }
 }
 // IA (niveau moyen) : elle choisit un couloir et une distance, en comptant avec ~6 % d'imprécision sur la force, et évite de viser trop près du vide.
@@ -1997,7 +2038,7 @@ function local(e){const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,
 window.addEventListener('pointerdown',function(e){
   if(G&&G.mode==='rush'){rushDown(e);return;}
   if(G&&G.mode==='petanque'&&view==='game'&&!paused&&G.phase==='pscore'){
-    if(G.pt.res&&G.pt.res.t>0.8&&!(e.target.closest&&e.target.closest('.screen,button')))petAfterScore();
+    if(G.pt.res&&G.pt.res.t>0.8&&(!ON||ON.host)&&!(e.target.closest&&e.target.closest('.screen,button')))petAfterScore();
     return;
   }
   if(!G||view!=='game'||G.phase!=='aim'||paused||aim||G.enter<ENTER_T||G.award||G.qp!=null)return;
@@ -2032,7 +2073,7 @@ function endAim(e,fire){
       const rq=local(e),rdx=rq.x-ra.sx,rdy=rq.y-ra.sy,rlen=Math.hypot(rdx,rdy),rf=rlen/(WR*S);
       if(fire&&G&&G.mode==='rush'&&G.phase==='rush'&&G.rush.st==='run'&&G.cool[ra.p]<=0&&rf>=L_MIN){
         const u=vWorld(rdx/rlen,rdy/rlen);
-        rushThrow(ra.p,u.x,u.y,VMAX*powerOf(rf));
+        if(ON)olRushThrow(ra.p,u.x,u.y,VMAX*powerOf(rf));else rushThrow(ra.p,u.x,u.y,VMAX*powerOf(rf));
       }
       return;
     }
@@ -2043,7 +2084,8 @@ function endAim(e,fire){
   aim=null;
   if(fire&&G&&G.phase==='aim'&&frac>=L_MIN){
     const u=vWorld(dx/len,dy/len),v=VMAX*powerOf(frac);
-    if(ON)olThrow(G.turn,u.x,u.y,v);else if(G.mode==='petanque')petThrow(G.turn,u.x,u.y,v*PET_BOOST);else if(G.mode==='sniper')snThrow(G.turn,u.x,u.y,v);else launch(G.turn,u.x,u.y,v);
+    const vv=G.mode==='petanque'?v*PET_BOOST:v;
+    if(ON)olThrow(G.turn,u.x,u.y,vv);else if(G.mode==='petanque')petThrow(G.turn,u.x,u.y,vv);else if(G.mode==='sniper')snThrow(G.turn,u.x,u.y,vv);else launch(G.turn,u.x,u.y,vv);
   }
 }
 window.addEventListener('pointerup',function(e){endAim(e,true);});
@@ -2742,16 +2784,19 @@ function speedFor(D){
   for(let i=0;i<30;i++){const mid=(lo+hi)/2;if(travelOf(mid)<D)lo=mid;else hi=mid;}
   return (lo+hi)/2;
 }
-function rushThrow(p,ux,uy,v){
-  const a=anchorOf(p);
-  G.marbles.push(makeMarble(p,a.x,a.y,ux*v,uy*v));
+function rushThrow(p,ux,uy,v,id){
+  const a=anchorOf(p),mb=makeMarble(p,a.x,a.y,ux*v,uy*v);
+  if(id){mb.id=id;mb.born=G.t;} // en ligne : numéro du lancer, pour retrouver la bille dans les instantanés de l'hôte
+  G.marbles.push(mb);
   G.thrown[p]++;G.cool[p]=RUSH_CD;
   sfx('launch',Math.min(1,v/VMAX),false);
 }
 function rushDown(e){
   if(view!=='game'||paused||G.phase!=='rush'||G.rush.st!=='run')return;
   if(e.target&&e.target.closest&&e.target.closest('.screen,button'))return;
-  const q=local(e),s=slotAt(q.x,q.y);
+  const q=local(e);
+  let s;
+  if(G.seats){s=G.mySeat;if(s<0)return;}else s=slotAt(q.x,q.y); // en ligne, tout l'écran est à toi
   if(G.isAI[s])return; // le côté d'une IA ne se joue pas
   if(G.cool[s]>0){flash[s]=0.4;return;} // pas de bille prête : on attend qu'elle réapparaisse
   for(let i=0;i<raims.length;i++){if(raims[i].p===s)return;} // un seul doigt par joueur
@@ -2767,7 +2812,7 @@ function rushAiShot(p){
   const dx=tx-a.x,dy=ty-a.y,D=Math.hypot(dx,dy);
   const ang=Math.atan2(dy,dx)+(Math.random()*2-1)*0.1;
   const v=Math.min(VMAX,speedFor(D*(1+(Math.random()*2-1)*0.1)));
-  rushThrow(p,Math.cos(ang),Math.sin(ang),v);
+  if(ON)olRushThrow(p,Math.cos(ang),Math.sin(ang),v);else rushThrow(p,Math.cos(ang),Math.sin(ang),v);
 }
 function rushTick(dt){
   const R=G.rush;
@@ -2792,7 +2837,7 @@ function rushTick(dt){
     if(sec<=5&&sec>0&&sec!==R.lastSec){R.lastSec=sec;sfx('tick',sec===1?1:0);}
     if(sec===10&&R.lastSay!==10){R.lastSay=10;say('Plus que 10 secondes.');}
     for(let p=0;p<G.players;p++){
-      if(!G.isAI[p])continue;
+      if(!G.isAI[p]||(ON&&!ON.host))continue;
       G.aiT[p]-=dt;
       // L'IA attend elle aussi que sa bille réapparaisse (1 s), puis tire après une courte pause.
       if(G.aiT[p]<=0&&G.cool[p]<=0){rushAiShot(p);G.aiT[p]=Math.random()*0.4;}
@@ -2851,7 +2896,7 @@ function tallyTick(dt){
   }else{
     // Une courte pause sur le total final, puis le classement.
     T2.hold+=dt;
-    if(T2.hold>=0.9)endGame();
+    if(T2.hold>=0.9&&(!ON||ON.host)){endGame();if(ON)olPublish();}
   }
 }
 // Chrono en grand sur le plateau, translucide et sous les billes.
@@ -3078,9 +3123,9 @@ function frame(now){
       let moving=false;
       for(const m of G.marbles){if(m.fall>=0||((m.vx!==0||m.vy!==0)&&!m.rides)){moving=true;break;}}
       if(moving)G.settleT=0;
-      else if(G.mode==='rush'){if(G.rush.st==='settle'){G.settleT+=dt;if(G.settleT>.4)rushEnd();}else G.settleT=0;}
-      else if(G.mode==='petanque'){G.settleT+=dt;if(G.settleT>.35)petSettle();}
-      else if(G.mode==='sniper'){G.settleT+=dt;if(G.settleT>.35)snSettle();}
+      else if(G.mode==='rush'){if(G.rush.st==='settle'){G.settleT+=dt;if(G.settleT>.4&&(!ON||ON.host)){rushEnd();if(ON)olPublish();}}else G.settleT=0;}
+      else if(G.mode==='petanque'){G.settleT+=dt;if(G.settleT>.35){if(ON)olSettleRail();else petSettle();}}
+      else if(G.mode==='sniper'){G.settleT+=dt;if(G.settleT>.35){if(ON)olSettleRail();else snSettle();}}
       else if(G.bomb){G.bombT+=dt;if(G.bombT>0.5)explodeBomb();}
       else{G.settleT+=dt;if(G.settleT>.3){if(ON)olSettled();else settle();}}
     }else if(BOARD==='tournante'){spinRest(G.marbles,dt);}
@@ -3506,6 +3551,13 @@ $('restart').addEventListener('click',startGame);
 $('toPrefs').addEventListener('click',function(){settingsFrom='pause';syncPrefs();show('settings');});
 $('toHome').addEventListener('click',toHome);
 $('again').addEventListener('click',function(){if(ON){if(ON.host)hostStart();}else startGame();});
+// Hôte : retour au salon pour changer le mode et les réglages, sans que personne ne quitte la table.
+function hostToLobby(){
+  if(!ON||!ON.host)return;
+  put('',{'meta/status':'lobby',game:null,state:null,throw:null,live:null,rt:null},'PATCH');
+}
+$('toLobby').addEventListener('click',hostToLobby);
+$('toLobbyP').addEventListener('click',hostToLobby);
 $('toHome2').addEventListener('click',toHome);
 
 /* ---------- En ligne (Firebase Realtime Database, sans module externe) ----------
@@ -3618,7 +3670,7 @@ function olCreate(){
         throw new Error('taken');
       }
       const pl={};pl[UID]={t:now,seen:NOW,name:cleanName(cfg.me)};
-      return api('rooms/'+code,'PUT',{meta:{host:UID,t:now,status:'lobby',ai:0,marbles:cfg.marbles,power:!!cfg.power,board:(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible',hostSeen:NOW},players:pl})
+      return api('rooms/'+code,'PUT',{meta:{host:UID,t:now,status:'lobby',ai:0,marbles:cfg.marbles,power:!!cfg.power,board:(cfg.board==='morpion'||cfg.board==='tournante')?cfg.board:'cible',hostSeen:NOW,mode:(cfg.mode==='rush'||cfg.mode==='petanque'||cfg.mode==='sniper')?cfg.mode:'tactics',rushT:cfg.rushT===60?60:30,fmt:cfg.pFormat==='teams'?'teams':'solo',teams:cfg.teams.map(function(x){return x===1?1:0;})},players:pl})
         .then(function(){busy(b,false);enterRoom(code,true);});
     });
   };
@@ -3681,14 +3733,34 @@ function lobbyCounts(r){
   const h=order.length,ai=Math.max(0,Math.min(r.meta.ai||0,4-h));
   return {order:order,h:h,ai:ai};
 }
+const MODE_NAME={tactics:'Tactics',rush:'Rush',petanque:'Pétanque',sniper:'Sniper'};
+function lobbyMode(m){return (m.mode==='rush'||m.mode==='petanque'||m.mode==='sniper')?m.mode:'tactics';}
+function lobbyTeam(m,i){return ((m.teams||[])[i]===1)?1:0;}
+// Pétanque et Sniper par équipes : chaque équipe doit avoir au moins un joueur.
+function lobbyTeamsOk(m,n){
+  const md=lobbyMode(m);
+  if((md!=='petanque'&&md!=='sniper')||m.fmt!=='teams'||n<2)return true;
+  let a=0,b=0;
+  for(let i=0;i<n;i++){if(lobbyTeam(m,i)===1)b++;else a++;}
+  return a>0&&b>0;
+}
 function syncLobby(){
   const r=ON.room,m=r.meta,c=lobbyCounts(r),t=c.h+c.ai;
+  const md=lobbyMode(m),rail=md==='petanque'||md==='sniper';
+  const teamsOn=rail&&m.fmt==='teams'&&t>=2;
   const bd=(m.board==='morpion'||m.board==='tournante')?m.board:'cible';
+  // Équipe d'une place : l'hôte touche pour changer, les autres la voient.
+  const chip=function(i){
+    if(!teamsOn)return '';
+    const b=lobbyTeam(m,i)===1,l=b?'B':'A',txt='Équipe '+l+' · '+(b?'bleue':'rouge');
+    const sty='background:var(--'+(b?'ciel':'tomate')+');color:var(--on-color);border-color:var(--on-color)';
+    return ON.host?'<button type="button" class="mr-chip teamchip" data-team="'+i+'" style="'+sty+'" aria-label="'+txt+', toucher pour changer">'+txt+'</button>':'<span class="mr-chip teamchip" style="'+sty+'">'+txt+'</span>';
+  };
   $('lbRoster').innerHTML=c.order.concat(new Array(c.ai).fill('ai')).map(function(u,i){
     const bot=u==='ai',ch=CHARS[i];
     const shown=bot?ch.name:(cleanName(u===UID?cfg.me:((r.players||{})[u]||{}).name)||ch.name);
     const sub=bot?'<span class="tag-bot">'+BOT_SVG+'IA</span>':(u===UID?'Toi':'Joueur '+(i+1))+(u===m.host?' · Hôte':'');
-    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(shown)+(bot?', IA':', joueur '+(i+1)))+(bot?botBadge():'')+'</span><span class="roster__n"><strong>'+esc(shown)+'</strong><span class="roster__s">'+sub+'</span></span></li>';
+    return '<li class="roster__i"><span class="avbg">'+av(i,56,esc(shown)+(bot?', IA':', joueur '+(i+1)))+(bot?botBadge():'')+'</span><span class="roster__n"><strong>'+esc(shown)+'</strong><span class="roster__s">'+sub+'</span>'+chip(i)+'</span></li>';
   }).join('');
   $('lbHint').textContent='Partie à '+t+' : '+c.h+(c.h>1?' joueurs':' joueur')+(c.ai?' + '+c.ai+' IA':'');
   $('lbHost').hidden=!ON.host;
@@ -3696,6 +3768,17 @@ function syncLobby(){
   $('lbStart').hidden=!ON.host;
   if(ON.host){
     const free=4-c.h;
+    ['Tactics','Rush','Petanque','Sniper'].forEach(function(k){$('lbMd'+k).setAttribute('aria-pressed',String(md===k.toLowerCase()));});
+    $('lbRushField').hidden=md!=='rush';
+    $('lbPtField').hidden=!rail;
+    $('lbBdField').hidden=md!=='tactics'&&md!=='rush';
+    $('lbMarblesField').hidden=md!=='tactics'&&md!=='sniper';
+    $('lbPowField').hidden=md!=='tactics';
+    $('lbRt30').setAttribute('aria-pressed',String(m.rushT!==60));
+    $('lbRt60').setAttribute('aria-pressed',String(m.rushT===60));
+    $('lbPtSolo').setAttribute('aria-pressed',String(m.fmt!=='teams'));
+    $('lbPtTeams').setAttribute('aria-pressed',String(m.fmt==='teams'));
+    $('lbPtHint').textContent=md==='sniper'?(m.fmt==='teams'?'Deux équipes : A (rouge) et B (bleue), composées dans la liste des joueurs ci-dessus. Les points d’une équipe s’additionnent, le plus gros total gagne.':'Chacun pour soi : tout le monde tire le même nombre de billes, le plus gros total gagne.'):(m.fmt==='teams'?'Deux équipes : A (rouge) et B (bleue), composées dans la liste des joueurs ci-dessus. 3 billes par joueur, le premier camp à 13 points gagne.':'Chacun pour soi : 3 billes par joueur, le premier à 13 points gagne.');
     $('lbBdCible').setAttribute('aria-pressed',String(bd==='cible'));
     $('lbBdMorpion').setAttribute('aria-pressed',String(bd==='morpion'));
     $('lbBdSpin').setAttribute('aria-pressed',String(bd==='tournante'));
@@ -3706,10 +3789,16 @@ function syncLobby(){
     const lp=$('lbPow');lp.setAttribute('aria-checked',String(!!m.power));lp.lastElementChild.textContent=m.power?'Oui':'Non';
     setDisabled($('lbMinus'),m.marbles<=3);
     setDisabled($('lbPlus'),m.marbles>=15);
-    setDisabled($('lbStart'),t<2);
-    $('lbErr').textContent=t<2?'Il faut au moins 2 places : attends un ami ou ajoute une IA.':'';
+    const okT=lobbyTeamsOk(m,t);
+    setDisabled($('lbStart'),t<2||!okT);
+    $('lbErr').textContent=t<2?'Il faut au moins 2 places : attends un ami ou ajoute une IA.':(!okT?'Chaque équipe doit avoir au moins un joueur.':'');
   }else{
-    $('lbWait').textContent=(!ON.hostOn?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+BOARD_NAME[bd]+' · '+m.marbles+' billes par joueur'+(m.power?', power-ups activés.':'.');
+    let det='';
+    if(md==='tactics')det=BOARD_NAME[bd]+' · '+m.marbles+' billes par joueur'+(m.power?', power-ups activés':'');
+    else if(md==='rush')det=BOARD_NAME[bd]+' · '+(m.rushT===60?60:30)+' secondes';
+    else if(md==='petanque')det=(m.fmt==='teams'?'par équipes':'individuel')+' · 3 billes par joueur';
+    else det=(m.fmt==='teams'?'par équipes':'individuel')+' · '+m.marbles+' billes par joueur';
+    $('lbWait').textContent=(!ON.hostOn?'L’hôte s’est déconnecté. Attends son retour ou quitte le salon. ':'L’hôte règle la partie et la lance. ')+MODE_NAME[md]+' · '+det+'.';
     $('lbErr').textContent='';
   }
 }
@@ -3719,6 +3808,8 @@ function syncOnlineUi(){
   $('toHome').textContent=on?'Quitter le salon':'Menu principal';
   $('toHome2').textContent=on?'Quitter le salon':'Menu principal';
   $('again').hidden=on&&!ON.host;
+  $('toLobby').hidden=!(on&&ON.host);
+  $('toLobbyP').hidden=!(on&&ON.host);
   $('resWait').hidden=!(on&&!ON.host);
 }
 let noteT=0;
@@ -3744,42 +3835,65 @@ function onRoom(r){
 function curTune(){return {ACC:ACC,VISC:VISC,E_BALL:E_BALL,E_WALL:E_WALL,VMAX:VMAX};}
 function hostStart(){
   if(!ON||!ON.host||!ON.room)return;
-  const r=ON.room,c=lobbyCounts(r),n=c.h+c.ai;
+  const r=ON.room,m=r.meta,c=lobbyCounts(r),n=c.h+c.ai;
   if(n<2)return;
+  const md=lobbyMode(m);
+  if(!lobbyTeamsOk(m,n))return;
   const seats=c.order.concat(new Array(c.ai).fill('ai'));
   const z=new Array(n).fill(0);
   const names=seats.map(function(u,i){
     if(u==='ai')return CHARS[i].name;
     return cleanName(u===UID?cfg.me:((r.players||{})[u]||{}).name)||CHARS[i].name;
   });
+  const tac=md==='tactics';
   put('',{
     'meta/status':'game',
-    game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:r.meta.marbles,seats:seats,names:names,board:(r.meta.board==='morpion'||r.meta.board==='tournante')?r.meta.board:'cible',ai:seats.map(function(s){return s==='ai';}),tune:curTune(),pw:!!r.meta.power},
-    state:{seq:0,turn:0,thrown:z,lost:z,done:false,pow:new Array(n).fill(''),quota:new Array(n).fill(r.meta.marbles),awarded:0,qk:0,qp:-1,qs:0},
-    throw:null,live:null
+    game:{id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),n:n,N:m.marbles,seats:seats,names:names,mode:md,rushT:m.rushT===60?60:30,fmt:m.fmt==='teams'?'teams':'solo',tm:[0,1,2,3].map(function(k){return lobbyTeam(m,k);}),board:((md==='tactics'||md==='rush')&&(m.board==='morpion'||m.board==='tournante'))?m.board:'cible',ai:seats.map(function(s){return s==='ai';}),tune:curTune(),pw:tac&&!!m.power},
+    // Tactics démarre sur un état vide ; les autres modes attendent l'état publié par l'hôte (cochonet tiré au hasard, etc.).
+    state:tac?{seq:0,turn:0,thrown:z,lost:z,done:false,pow:new Array(n).fill(''),quota:new Array(n).fill(m.marbles),awarded:0,qk:0,qp:-1,qs:0}:null,
+    throw:null,live:null,rt:null
   },'PATCH');
 }
 function startOnline(r){
   const g=r.game,tu=g.tune||{};
-  BOARD=(g.board==='morpion'||g.board==='tournante')?g.board:'cible'; // plateau choisi par l'hôte
+  const md=(g.mode==='rush'||g.mode==='petanque'||g.mode==='sniper')?g.mode:'tactics';
+  BOARD=md==='petanque'?'petanque':md==='sniper'?'sniper':((g.board==='morpion'||g.board==='tournante')?g.board:'cible'); // plateau choisi par l'hôte
   SPIN=0;sndReset();
   // Tout le monde joue avec la physique de l'hôte.
   if(isFinite(tu.ACC))ACC=tu.ACC;if(isFinite(tu.VISC))VISC=tu.VISC;
   if(isFinite(tu.E_BALL))E_BALL=tu.E_BALL;if(isFinite(tu.E_WALL))E_WALL=tu.E_WALL;if(isFinite(tu.VMAX))VMAX=tu.VMAX;
+  ON.rv=0;ON.liveBusy=false;
   G={
     players:g.n,N:g.N,marbles:[],isAI:g.ai.slice(),seats:g.seats.slice(),gid:g.id,mySeat:g.seats.indexOf(UID),names:g.seats.map(function(u,i){return cleanName((g.names||[])[i])||CHARS[i].name;}),
-    seq:-1,rollSeq:-1,pend:null,
+    mode:md,fmt:g.fmt==='teams'?'teams':'solo',tm:[0,1,2,3].map(function(k){return ((g.tm||[])[k]===1)?1:0;}),
+    seq:-1,rollSeq:-1,rv:-1,pend:null,rtSeen:{},rcnt:[0,0,0,0],
     thrown:new Array(g.n).fill(0),scores:new Array(g.n).fill(0),lost:new Array(g.n).fill(0),
     turn:0,phase:'aim',t:calm?INTRO_T:0,settleT:0,enter:calm?ENTER_T:0,
     quota:new Array(g.n).fill(g.N),power:!!g.pw,pow:new Array(g.n).fill(null),
     awarded:0,bomb:null,bombT:0,fx:null,shake:0,award:null,qp:null,qk:0,qs:0,awK:0
   };
+  raims=[];
+  if(md==='rush'){
+    // Rush : compte à rebours, puis chrono commun ; l'hôte fait foi pour le chrono et le comptage.
+    const dur=g.rushT===60?60:30;
+    G.power=false;G.phase='rush';
+    G.rush={st:'count',cd:3,left:dur,dur:dur,lastSec:0,lastSay:0,goT:0,endT:0};
+    G.cool=new Array(g.n).fill(0);
+    G.aiT=G.isAI.map(function(){return 0.4+Math.random()*0.7;});
+  }
+  if(md==='petanque')petInit();
+  if(md==='sniper')snInit();
   aim=null;paused=false;
   for(let i=0;i<4;i++)flash[i]=0;
   $('note').hidden=true;
   syncOnlineUi();
   show('game');
   layout();
+  if(md==='petanque'||md==='sniper'){
+    // L'hôte tire le cochonet et le premier joueur, puis publie ; les autres attendent cet état.
+    if(ON.host)olPublish();else G.phase='wait';
+  }
+  say(md==='rush'?'Rush : '+G.rush.dur+' secondes. Prêts ?':(md==='petanque'?'Pétanque. ':(md==='sniper'?'Sniper. ':''))+turnText());
   onlineUpdate(r);
 }
 function onlineUpdate(r){
@@ -3791,13 +3905,16 @@ function onlineUpdate(r){
       note(i===G.mySeat?'Tu as été déconnecté : une IA joue à ta place.':nm(i)+' est parti : une IA prend sa place.');
     }
   });
-  if(st&&(st.seq>G.seq||(st.seq===G.seq&&(st.qk||0)>(G.qk||0)))&&(!G.pend||st.seq>=G.pend.seq)){G.pend=st;G.pendAt=performance.now();}
+  // États : numérotés par l'hôte (rv). Un état publié par l'hôte lui-même (h) est déjà appliqué chez lui.
+  if(st&&!(st.h&&ON.host)&&(st.rv||0)>G.rv&&(!G.pend||(st.rv||0)>(G.pend.rv||0))){G.pend=st;G.pendAt=performance.now();}
   // Un lancer d'un autre téléphone : on applique d'abord l'état attendu, puis on rejoue le lancer.
-  if(th&&G.rollSeq!==th.seq&&G.pend&&G.pend.seq===th.seq-1)applyState(G.pend);
+  if(G.mode!=='rush'&&th&&G.rollSeq!==th.seq&&G.pend&&G.pend.seq===th.seq-1)applyState(G.pend);
   if(G.pend&&G.phase!=='roll')applyState(G.pend);
-  if(th&&th.seq===G.seq+1&&G.rollSeq!==th.seq&&G.phase==='aim'&&th.p===G.turn){
+  if(G.mode==='rush'){
+    if(r.rt)rushEvents(r.rt);
+  }else if(th&&th.seq===G.seq+1&&G.rollSeq!==th.seq&&G.phase==='aim'&&th.p===G.turn){
     G.rollSeq=th.seq;aim=null;
-    launch(th.p,th.ux,th.uy,th.v);
+    doLaunch(th.p,th.ux,th.uy,th.v);
   }
   if(!ON.host&&r.live)applyLive(r.live);
 }
@@ -3808,36 +3925,42 @@ function onlineUpdate(r){
    les invités s'y recalent (puis rattrapent le temps écoulé) et ne s'éloignent jamais de plus de 0,2 s de l'hôte. */
 const LIVE_EVERY=48; // pas de simulation entre deux instantanés (48 pas de 1/240 s = 0,2 s)
 // Identifie le mouvement en cours : un lancer, ou un tremblement de terre.
-function liveKey(){return G.preQuake?('q'+G.seq+':'+(G.qk||0)):('r'+G.rollSeq);}
+function liveKey(){if(G.mode==='rush')return 'rs';return G.preQuake?('q'+G.seq+':'+(G.qk||0)):('r'+G.rollSeq);}
 function packMarble(m){
   const a=function(v){return Math.round(v*10)/10;},b=function(v){return Math.round(v*1000)/1000;};
-  const f=(m.entered?1:0)|(m.out?2:0)|(m.rides?4:0)|(m.vf?8:0)|(m.magnet?16:0)|(m.bomb?32:0);
-  return [m.owner,a(m.x),a(m.y),a(m.vx),a(m.vy),a(m.roll),b(m.dir),b(m.fall),f,a(m.r),m.mass,b(m.magT||0),a(m.fr||0),b(m.fa||0)];
+  const f=(m.entered?1:0)|(m.out?2:0)|(m.rides?4:0)|(m.vf?8:0)|(m.magnet?16:0)|(m.bomb?32:0)|(m.coch?64:0)|(m.counted?128:0);
+  return [m.owner,a(m.x),a(m.y),a(m.vx),a(m.vy),a(m.roll),b(m.dir),b(m.fall),f,a(m.r),m.mass,b(m.magT||0),a(m.fr||0),b(m.fa||0),m.id||0];
 }
 function unpackMarble(a){
   const m=makeMarble(a[0],a[1],a[2],a[3],a[4]);
   m.roll=a[5];m.dir=a[6];m.fall=a[7];
   const f=a[8]|0;
-  m.entered=!!(f&1);m.out=!!(f&2);m.rides=!!(f&4);m.vf=!!(f&8);m.magnet=!!(f&16);m.bomb=!!(f&32);
+  m.entered=!!(f&1);m.out=!!(f&2);m.rides=!!(f&4);m.vf=!!(f&8);m.magnet=!!(f&16);m.bomb=!!(f&32);m.coch=!!(f&64);m.counted=!!(f&128);m.id=a[14]||0;
   m.r=a[9]||MR;m.mass=a[10]||1;m.magT=a[11]||0;m.fr=a[12]||0;m.fa=a[13]||0;
   return m;
 }
 // Hôte : publie l'instantané. Une seule requête à la fois, sans nouvel essai, pour qu'un vieil instantané n'en écrase jamais un récent.
 function hostLive(){
-  if(!ON||!ON.host||!G||!G.gid||G.phase!=='roll'||ON.liveBusy)return;
+  if(!ON||!ON.host||!G||!G.gid||(G.phase!=='roll'&&G.phase!=='rush')||ON.liveBusy)return;
+  if(G.mode==='rush'&&(!G.rush||G.rush.st==='tally'))return;
   const n=G.rsteps||0;
   if(n-(G.liveAt||0)<LIVE_EVERY)return;
   G.liveAt=n;ON.liveBusy=true;
   const on=ON;
-  api('rooms/'+on.code+'/live','PUT',{k:liveKey(),n:n,sp:Math.round(SPIN*1000)/1000,ms:G.marbles.filter(function(m){return !m.out;}).map(packMarble)})
+  const o={k:liveKey(),n:n,sp:Math.round(SPIN*1000)/1000,ms:G.marbles.filter(function(m){return !m.out;}).map(packMarble)};
+  if(G.mode==='rush'&&G.rush)o.rs={s:G.rush.st,c:Math.round(G.rush.cd*100)/100,l:Math.round(G.rush.left*100)/100};
+  api('rooms/'+on.code+'/live','PUT',o)
     .then(noop,noop).then(function(){on.liveBusy=false;});
 }
 // Invité : reprend l'instantané de l'hôte, puis avance jusqu'à l'instant présent.
 function applyLive(lv){
-  if(!G||!G.gid||!G.seats||(G.phase!=='roll'&&G.phase!=='wait'))return;
+  if(!G||!G.gid||!G.seats)return;
+  const rush=G.mode==='rush';
+  if(rush){if(G.phase!=='rush')return;}
+  else if(G.phase!=='roll'&&G.phase!=='wait')return;
   const k=liveKey();
   if(lv.k!==k)return;
-  if(!G.preQuake&&!(G.rollSeq>G.seq))return; // l'état final de ce lancer est déjà arrivé
+  if(!rush&&!G.preQuake&&!(G.rollSeq>G.seq))return; // l'état final de ce lancer est déjà arrivé
   if(G.liveK!==k){G.liveK=k;G.liveN=-1;}
   const n=lv.n|0;
   if(n<=G.liveN)return;
@@ -3849,24 +3972,39 @@ function applyLive(lv){
     REC=null;
     for(let i=0;i<d;i++){stepPhysics(ms,STEP);if(BOARD==='tournante')SPIN+=OMEGA*STEP;}
   }else G.rsteps=n;
+  if(rush){
+    // Billes que ce téléphone vient de lancer et que l'hôte n'a pas encore reçues : on les garde jusqu'à l'instantané suivant.
+    const have={};
+    ms.forEach(function(m){if(m.id)have[m.id]=1;});
+    G.marbles.forEach(function(m){if(m.id&&!have[m.id]&&G.t-(m.born||0)<0.9&&!m.out&&m.fall<0)ms.push(m);});
+    const R=G.rush,rs=lv.rs;
+    if(rs&&R&&R.st!=='tally'&&rs.s!=='tally'){
+      if(rs.s==='settle'&&R.st!=='settle'){R.endT=0;raims.length=0;G.settleT=0;}
+      R.st=rs.s;R.cd=rs.c;R.left=rs.l;
+    }
+  }
   G.marbles=ms;
   const bm=ms.filter(function(m){return m.bomb;})[0]||null;
   G.bomb=bm;if(!bm)G.bombT=0;
-  G.phase='roll';G.settleT=0;
-  recompute();
+  if(!rush){G.phase='roll';G.settleT=0;}
+  if(G.mode==='tactics')recompute();
 }
 function applyState(st){
   if(!G)return;
-  G.pend=null;G.seq=st.seq;
-  G.marbles=(st.ms||[]).map(function(a){
-    const m=makeMarble(a[0],a[1],a[2],0,0);
-    m.entered=true;m.roll=a[3]||0;m.dir=a[4]||0;
-    // Cible tournante : une bille arrêtée tourne avec le plateau (sinon elle reste figée tant que personne ne tire).
-    if(BOARD==='tournante'){m.rides=true;m.vx=-OMEGA*m.y;m.vy=OMEGA*m.x;}
-    if(a[5])m.r=a[5];
-    if(a[6])m.mass=a[6];
-    return m;
-  });
+  G.pend=null;G.seq=st.seq;G.rv=st.rv||0;
+  if(st.mm){
+    G.marbles=st.mm.map(unpackMarble);
+  }else{
+    G.marbles=(st.ms||[]).map(function(a){
+      const m=makeMarble(a[0],a[1],a[2],0,0);
+      m.entered=true;m.roll=a[3]||0;m.dir=a[4]||0;
+      // Cible tournante : une bille arrêtée tourne avec le plateau (sinon elle reste figée tant que personne ne tire).
+      if(BOARD==='tournante'){m.rides=true;m.vx=-OMEGA*m.y;m.vy=OMEGA*m.x;}
+      if(a[5])m.r=a[5];
+      if(a[6])m.mass=a[6];
+      return m;
+    });
+  }
   // Le décor du plateau tournant reprend l'angle de l'hôte : billes et plateau restent alignés sur tous les téléphones.
   if(BOARD==='tournante'&&isFinite(st.sp))SPIN=st.sp;
   const n=G.players;
@@ -3878,18 +4016,127 @@ function applyState(st){
     G.bomb=null;G.bombT=0;G.fx=null;G.preQuake=false;
     if(st.aw&&st.aw.k>G.awK){G.awK=st.aw.k;G.award={p:st.aw.p,type:st.aw.type,t:0,dur:calm?1.8:2.6};}
   }
-  recompute();
+  if(G.pt&&st.pt)desPt(st.pt);
+  if(G.mode==='sniper'){
+    G.snCur=null;
+    if(st.po){
+      G.snPop={x:st.po[0],y:st.po[1],pts:st.po[2],fell:!!st.po[3],owner:st.po[4],t:0};
+      sfx(st.po[3]?'out':(st.po[2]>=50?'award':'tick'),st.po[2]>=50?1:0);
+    }else G.snPop=null;
+  }
+  if(G.mode==='tactics')recompute();
+  else if(st.sc){for(let p=0;p<n;p++)G.scores[p]=st.sc[p]||0;}
+  if(G.mode==='rush'&&G.rush){
+    const R=G.rush;
+    if(st.rs){
+      if(st.rs.s==='settle'&&R.st!=='settle'){R.endT=0;raims.length=0;G.settleT=0;}
+      R.st=st.rs.s;R.cd=st.rs.c;R.left=st.rs.l;
+    }
+    if(st.tl&&R.st==='tally'){
+      // Comptage décidé par l'hôte : chaque téléphone le déroule à l'identique.
+      const T=st.tl,lists=[];
+      for(let p=0;p<n;p++){
+        const arr=(T.L&&T.L[p])||[];
+        lists.push(Object.keys(arr).map(function(k){const q=arr[k];return {m:G.marbles[q[0]],pts:q[1],t:-1};}).filter(function(e){return e.m;}));
+        G.scores[p]=0;
+      }
+      R.tally={lists:lists,i:T.i||0,max:T.mx||0,step:T.sp||0.2,acc:0,hold:0};
+    }
+  }
   G.aiThink=null;G.aiShot=null;
   if(st.done){endGame();return;}
-  const changed=G.turn!==st.turn||G.phase!=='aim';
-  G.turn=st.turn||0;G.phase='aim';
-  if(changed||st.seq===0){G.enter=calm?ENTER_T:0;say(turnText());}
+  const ph=st.ph||'aim';
+  const changed=G.turn!==st.turn||G.phase!==ph;
+  G.turn=st.turn||0;G.phase=ph;
+  if(ph==='aim'){
+    if(changed||st.seq===0){G.enter=calm?ENTER_T:0;say(turnText());}
+  }else if(ph==='pscore'&&G.pt&&G.pt.res){
+    const R2=G.pt.res;
+    if(R2.pts>0)sfx('award');
+    say('Manche '+G.pt.round+' : '+(R2.win>=0?petSideName(R2.win)+' marque '+R2.pts+(R2.pts>1?' points.':' point.'):'personne ne marque.'));
+  }
+}
+// Lance une bille selon le mode de jeu.
+function doLaunch(p,ux,uy,v){
+  if(G.mode==='petanque')petThrow(p,ux,uy,v);
+  else if(G.mode==='sniper')snThrow(p,ux,uy,v);
+  else launch(p,ux,uy,v);
 }
 function olThrow(p,ux,uy,v){
   const seq=G.seq+1;
   G.rollSeq=seq;
-  launch(p,ux,uy,v);
+  doLaunch(p,ux,uy,v);
   put('throw',{seq:seq,p:p,ux:ux,uy:uy,v:v});
+}
+// Rush : chacun lance quand il veut. Le lancer est joué tout de suite chez le lanceur, puis diffusé (rt) ; l'hôte fait foi.
+function olRushThrow(p,ux,uy,v){
+  const id=p*1000000+(G.rcnt[p]=(G.rcnt[p]||0)+1);
+  const rx=Math.round(ux*1e4)/1e4,ry=Math.round(uy*1e4)/1e4,rv=Math.round(v);
+  rushThrow(p,rx,ry,rv,id);
+  const k='k'+id;
+  G.rtSeen[k]=1;
+  put('rt/'+k,{id:id,p:p,ux:rx,uy:ry,v:rv});
+}
+// Lancers Rush des autres téléphones (et des IA de l'hôte) : on les rejoue ; ceux de ce téléphone sont déjà joués.
+function rushEvents(rt){
+  const R=G.rush;
+  Object.keys(rt).forEach(function(k){
+    if(G.rtSeen[k])return;
+    G.rtSeen[k]=1;
+    const e=rt[k];
+    if(!e||e.p==null)return;
+    if(e.p===G.mySeat||(ON.host&&G.isAI[e.p]))return;
+    if(G.phase!=='rush'||!R||R.st!=='run')return;
+    if(G.marbles.some(function(m){return m.id===e.id;}))return;
+    rushThrow(e.p,e.ux,e.uy,e.v,e.id);
+  });
+}
+// Pétanque et Sniper : les billes sont arrêtées ; l'hôte règle la suite (manche, tour, points), puis publie.
+function olSettleRail(){
+  G.settleT=0;
+  if(!ON.host){G.phase='wait';return;}
+  if(G.mode==='petanque')petSettle();else snSettle();
+  olPublish();
+}
+// Pétanque : partie « manches, cochonet, camps » de l'état.
+function serPt(P,idx){
+  const o={pt:[0,1,2,3].map(function(sd){return P.pts[sd]||0;}),rd:P.round||0,ls:P.lastSide,lp:P.lastP,lt:(P.lastT||[]).slice(),sq:P.seq||0,sr:P.starter||0,ci:P.coch?idx(P.coch):-1};
+  if(P.banner){o.b1=P.banner.t1;o.b2=P.banner.t2;}
+  if(P.res){o.rs=1;o.rw=P.res.win;o.rp=P.res.pts;o.rb=P.res.balls.map(idx);}
+  return o;
+}
+function desPt(o){
+  const P=G.pt;
+  const pts={};
+  P.sides.forEach(function(sd){pts[sd]=(o.pt&&o.pt[sd])||0;});
+  P.pts=pts;
+  P.round=o.rd||0;
+  P.lastSide=o.ls!=null?o.ls:-1;P.lastP=o.lp!=null?o.lp:-1;
+  P.lastT=[];for(let p=0;p<G.players;p++)P.lastT.push((o.lt&&o.lt[p])||0);
+  P.seq=o.sq||0;P.starter=o.sr||0;
+  const c=(o.ci!=null&&o.ci>=0)?G.marbles[o.ci]:null;
+  if(c)P.coch=c;
+  if(o.b1!=null&&(!P.banner||P.banner.t1!==o.b1||P.banner.t2!==o.b2)){P.banner={t1:o.b1,t2:o.b2};P.bannerT=0;}
+  if(o.rs){
+    P.res={win:o.rw!=null?o.rw:-1,pts:o.rp||0,balls:(o.rb||[]).map(function(i){return G.marbles[i];}).filter(Boolean),t:P.res?P.res.t:0};
+  }else P.res=null;
+}
+// Hôte : publie l'état complet (Pétanque, Sniper, Rush). Les autres téléphones le reprennent tel quel.
+function olPublish(){
+  if(!ON||!ON.host||!G)return;
+  if(G.seq<0)G.seq=0;
+  if(G.rollSeq>G.seq)G.seq=G.rollSeq;
+  const list=G.marbles.filter(function(m){return !m.out&&m.fall<0;});
+  const idx=function(m){return list.indexOf(m);};
+  const st={rv:++ON.rv,h:1,seq:G.seq,turn:G.turn,ph:G.phase,done:G.phase==='end',thrown:G.thrown.slice(),lost:G.lost.slice(),sc:G.scores.slice(),sp:Math.round(SPIN*1000)/1000,mm:list.map(packMarble)};
+  if(G.pt)st.pt=serPt(G.pt,idx);
+  if(G.mode==='sniper'&&G.snPop){const o=G.snPop;st.po=[Math.round(o.x),Math.round(o.y),o.pts,o.fell?1:0,o.owner];}
+  if(G.mode==='rush'&&G.rush){
+    const R=G.rush;
+    st.rs={s:R.st,c:Math.round(R.cd*100)/100,l:Math.round(R.left*100)/100};
+    if(R.tally){const T2=R.tally;st.tl={i:T2.i,mx:T2.max,sp:T2.step,L:T2.lists.map(function(l){return l.map(function(e){return [idx(e.m),e.pts];});})};}
+  }
+  put('state',st);
 }
 // Billes arrêtées : l'hôte publie le nouvel état, les autres l'attendent.
 function olSettled(){
@@ -3914,7 +4161,7 @@ function olSettled(){
     turn=nextTurn();
   }
   const st={
-    seq:seq,turn:turn,
+    rv:++ON.rv,seq:seq,turn:turn,
     thrown:G.thrown.slice(),lost:G.lost.slice(),done:done,
     sp:rd(((SPIN%TAU)+TAU)%TAU,1000),
     ms:G.marbles.filter(function(m){return m.fall<0&&!m.out;}).map(function(m){
@@ -4013,6 +4260,21 @@ $('lbBdMorpion').addEventListener('click',function(){lbBoard('morpion');});
 $('lbBdSpin').addEventListener('click',function(){lbBoard('tournante');});
 $('lbMinus').addEventListener('click',function(){if(!isOff(this))lbMarbles(-1);});
 $('lbPlus').addEventListener('click',function(){if(!isOff(this))lbMarbles(1);});
+// Mode, durée du chrono, format et équipes : réservés à l'hôte, enregistrés dans le salon.
+function lbHostOk(){return !!(ON&&ON.host&&ON.room&&ON.room.meta);}
+['Tactics','Rush','Petanque','Sniper'].forEach(function(k){
+  $('lbMd'+k).addEventListener('click',function(){if(lbHostOk())put('meta/mode',k.toLowerCase());});
+});
+$('lbRt30').addEventListener('click',function(){if(lbHostOk())put('meta/rushT',30);});
+$('lbRt60').addEventListener('click',function(){if(lbHostOk())put('meta/rushT',60);});
+$('lbPtSolo').addEventListener('click',function(){if(lbHostOk())put('meta/fmt','solo');});
+$('lbPtTeams').addEventListener('click',function(){if(lbHostOk())put('meta/fmt','teams');});
+$('lbRoster').addEventListener('click',function(e){
+  const b=e.target.closest&&e.target.closest('button[data-team]');
+  if(!b||!lbHostOk())return;
+  const i=Number(b.getAttribute('data-team'));
+  put('meta/teams/'+i,lobbyTeam(ON.room.meta,i)===1?0:1);
+});
 
 /* ---------- Effet de clic ---------- */
 document.addEventListener('click',function(e){
